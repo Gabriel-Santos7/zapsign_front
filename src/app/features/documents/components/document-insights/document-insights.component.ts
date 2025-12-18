@@ -6,9 +6,10 @@ import {
   ChangeDetectionStrategy,
   input,
   output,
+  computed,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { CommonModule, DatePipe } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { CardModule } from 'primeng/card';
@@ -30,18 +31,39 @@ import { HttpErrorResponse } from '@angular/common/http';
     CardModule,
     TagModule,
     LoadingComponent,
+    DatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <p-dialog
-      [visible]="visible()"
-      (visibleChange)="onVisibleChange($event)"
-      [header]="'Insights do Documento'"
-      [modal]="true"
-      [style]="{ width: '800px' }"
-      [closable]="true"
-      (onHide)="onClose()"
-    >
+    @if (isDialogMode()) {
+      <p-dialog
+        [visible]="visible()"
+        (visibleChange)="onVisibleChange($event)"
+        [header]="'Insights do Documento'"
+        [modal]="true"
+        [style]="{ width: '800px' }"
+        [closable]="true"
+        (onHide)="onClose()"
+      >
+        <ng-container *ngTemplateOutlet="insightsContent"></ng-container>
+      </p-dialog>
+    } @else {
+      <div class="insights-page-container">
+        <div class="insights-page-header">
+          <h1>Insights do Documento</h1>
+          <p-button
+            label="Voltar"
+            icon="pi pi-arrow-left"
+            [outlined]="true"
+            (onClick)="goBack()"
+            ariaLabel="Voltar para detalhes do documento"
+          />
+        </div>
+        <ng-container *ngTemplateOutlet="insightsContent"></ng-container>
+      </div>
+    }
+
+    <ng-template #insightsContent>
       @if (loading()) {
         <app-loading />
       } @else if (error()) {
@@ -94,9 +116,24 @@ import { HttpErrorResponse } from '@angular/common/http';
           </div>
         </div>
       }
-    </p-dialog>
+    </ng-template>
   `,
   styles: `
+    .insights-page-container {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .insights-page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
     .insights-content {
       display: flex;
       flex-direction: column;
@@ -154,7 +191,7 @@ import { HttpErrorResponse } from '@angular/common/http';
   `,
 })
 export class DocumentInsightsComponent implements OnInit {
-  documentId = input.required<number>();
+  documentId = input<number | null>(null);
   visible = input<boolean>(false);
   visibleChange = output<boolean>();
   closed = output<void>();
@@ -163,6 +200,7 @@ export class DocumentInsightsComponent implements OnInit {
   private companyService = inject(CompanyService);
   private notificationService = inject(NotificationService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   private readonly loadingSignal = signal<boolean>(false);
   private readonly errorSignal = signal<string | null>(null);
@@ -174,11 +212,19 @@ export class DocumentInsightsComponent implements OnInit {
   analyzing = this.analyzingSignal.asReadonly();
   insights = this.insightsSignal.asReadonly();
 
+  // Detecta se está em modo dialog (quando documentId vem do input) ou página (quando vem da rota)
+  isDialogMode = computed(() => {
+    return this.documentId() !== null && this.documentId() !== undefined;
+  });
+
   ngOnInit(): void {
     // Se documentId vem do input, usa ele; senão tenta pegar da rota
-    const id = this.documentId() || this.route.snapshot.paramMap.get('id');
+    const idFromInput = this.documentId();
+    const idFromRoute = this.route.snapshot.paramMap.get('id');
+    const id = idFromInput || (idFromRoute ? +idFromRoute : null);
+    
     if (id) {
-      this.loadInsights(+id);
+      this.loadInsights(id);
     }
   }
 
@@ -213,8 +259,11 @@ export class DocumentInsightsComponent implements OnInit {
   }
 
   forceAnalysis(): void {
-    const id = this.documentId() || this.route.snapshot.paramMap.get('id');
+    const idFromInput = this.documentId();
+    const idFromRoute = this.route.snapshot.paramMap.get('id');
+    const id = idFromInput || (idFromRoute ? +idFromRoute : null);
     const companyId = this.companyService.getCompanyId();
+    
     if (!id || !companyId) {
       return;
     }
@@ -222,7 +271,7 @@ export class DocumentInsightsComponent implements OnInit {
     this.analyzingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.documentService.analyzeDocument(companyId, +id).subscribe({
+    this.documentService.analyzeDocument(companyId, id).subscribe({
       next: (insights: DocumentInsights) => {
         this.insightsSignal.set(insights);
         this.analyzingSignal.set(false);
@@ -245,6 +294,16 @@ export class DocumentInsightsComponent implements OnInit {
   onClose(): void {
     this.closed.emit();
   }
+
+  goBack(): void {
+    const idFromInput = this.documentId();
+    const idFromRoute = this.route.snapshot.paramMap.get('id');
+    const id = idFromInput || (idFromRoute ? +idFromRoute : null);
+    
+    if (id) {
+      this.router.navigate(['/documents', id]);
+    } else {
+      this.router.navigate(['/documents']);
+    }
+  }
 }
-
-
