@@ -15,8 +15,9 @@ export function pdfUrlValidator(): ValidatorFn {
       return { invalidUrl: { value: control.value } };
     }
 
-    // Verifica se termina com .pdf
-    if (!url.toLowerCase().endsWith('.pdf')) {
+    // Verifica se termina com .pdf (antes de query params ou fragments)
+    const urlWithoutQuery = url.split('?')[0].split('#')[0];
+    if (!urlWithoutQuery.toLowerCase().endsWith('.pdf')) {
       return { invalidPdfExtension: { value: control.value } };
     }
 
