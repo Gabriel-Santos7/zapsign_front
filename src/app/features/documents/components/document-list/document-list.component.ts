@@ -129,7 +129,7 @@ import { HttpErrorResponse } from '@angular/common/http';
           [loading]="loading()"
           [rowsPerPageOptions]="[10, 20, 50]"
           [globalFilterFields]="['name']"
-          [trackBy]="trackByDocumentId"
+          [rowTrackBy]="trackByDocumentId"
           ariaLabel="Lista de documentos"
         >
           <ng-template pTemplate="header">

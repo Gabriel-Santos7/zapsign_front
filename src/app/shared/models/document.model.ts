@@ -67,6 +67,7 @@ export interface DocumentMetrics {
 }
 
 export interface DocumentAlert {
+  id?: number;
   type: string;
   message: string;
   document_id: number;
