@@ -120,7 +120,7 @@ import { HttpErrorResponse } from '@angular/common/http';
         </div>
       } @else {
         <p-table
-          [value]="filteredDocuments()"
+          [value]="documents()"
           [paginator]="true"
           [rows]="pageSize()"
           [totalRecords]="totalRecords()"
@@ -128,6 +128,8 @@ import { HttpErrorResponse } from '@angular/common/http';
           (onLazyLoad)="onLazyLoad($event)"
           [loading]="loading()"
           [rowsPerPageOptions]="[10, 20, 50]"
+          [globalFilterFields]="['name']"
+          [trackBy]="trackByDocumentId"
           ariaLabel="Lista de documentos"
         >
           <ng-template pTemplate="header">
@@ -434,6 +436,7 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private readonly destroy$ = new Subject<void>();
   private isLoadingDocuments = false;
+  private isUpdatingFromLazyLoad = false;
 
   private readonly loadingSignal = signal<boolean>(false);
   private readonly errorSignal = signal<string | null>(null);
@@ -462,23 +465,7 @@ export class DocumentListComponent implements OnInit, OnDestroy {
     return [{ label: 'Todos', value: null }, ...options];
   });
 
-  filteredDocuments = computed(() => {
-    let docs = this.documents();
-    const status = this.selectedStatusSignal();
-    const search = this.searchTermSignal().toLowerCase().trim();
-
-    if (status) {
-      docs = docs.filter((doc) => doc.internal_status === status);
-    }
-
-    if (search) {
-      docs = docs.filter((doc) =>
-        doc.name.toLowerCase().includes(search)
-      );
-    }
-
-    return docs;
-  });
+  // Removido filteredDocuments - filtragem será feita no backend via parâmetros de query
 
   constructor() {
     // Usar takeUntil para gerenciar subscriptions e evitar memory leaks
@@ -541,8 +528,11 @@ export class DocumentListComponent implements OnInit, OnDestroy {
           }
 
           const companyId = company.id;
+          const currentPage = this.currentPage();
+          const pageSize = this.pageSize();
+          
           this.documentService
-            .getDocuments(companyId, this.currentPage(), this.pageSize())
+            .getDocuments(companyId, currentPage, pageSize)
             .pipe(
               takeUntil(this.destroy$),
               catchError((err: HttpErrorResponse | Error) => {
@@ -556,8 +546,14 @@ export class DocumentListComponent implements OnInit, OnDestroy {
               })
             )
             .subscribe((response: PaginatedResponse<Document>) => {
-              this.documentsSignal.set(response.results);
-              this.totalRecordsSignal.set(response.count);
+              // Só atualizar se ainda estamos na mesma página (evitar race conditions)
+              if (this.currentPage() === currentPage && this.pageSize() === pageSize) {
+                // Usar setTimeout para evitar que o table detecte a mudança e dispare onLazyLoad novamente
+                setTimeout(() => {
+                  this.documentsSignal.set(response.results);
+                  this.totalRecordsSignal.set(response.count);
+                }, 0);
+              }
               this.loadingSignal.set(false);
               this.isLoadingDocuments = false;
             });
@@ -566,19 +562,53 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   }
 
   onLazyLoad(event: TableLazyLoadEvent): void {
+    // Ignorar se já estiver carregando ou se for uma atualização programática
+    if (this.isLoadingDocuments || this.isUpdatingFromLazyLoad) {
+      return;
+    }
+
     const first = event.first ?? 0;
     const rows = event.rows ?? 20;
-    this.currentPageSignal.set((first / rows) + 1);
-    this.pageSizeSignal.set(rows);
-    this.loadDocuments();
+    const newPage = Math.floor(first / rows) + 1;
+    const newPageSize = rows;
+
+    // Só recarregar se a página ou tamanho realmente mudou
+    const currentPage = this.currentPage();
+    const currentPageSize = this.pageSize();
+    
+    if (currentPage !== newPage || currentPageSize !== newPageSize) {
+      this.isUpdatingFromLazyLoad = true;
+      
+      // Atualizar signals primeiro
+      this.currentPageSignal.set(newPage);
+      this.pageSizeSignal.set(newPageSize);
+      
+      // Carregar documentos
+      this.loadDocuments();
+      
+      // Resetar flag após um pequeno delay para permitir que o table atualize
+      setTimeout(() => {
+        this.isUpdatingFromLazyLoad = false;
+      }, 100);
+    }
   }
 
   onStatusFilterChange(): void {
     this.selectedStatusSignal.set(this.selectedStatus);
+    // Resetar para primeira página quando filtrar
+    if (this.currentPage() !== 1) {
+      this.currentPageSignal.set(1);
+      this.loadDocuments();
+    }
   }
 
   onSearchChange(): void {
     this.searchTermSignal.set(this.searchTerm);
+    // Resetar para primeira página quando buscar
+    if (this.currentPage() !== 1) {
+      this.currentPageSignal.set(1);
+      this.loadDocuments();
+    }
   }
 
   refreshDocuments(): void {
@@ -646,6 +676,10 @@ export class DocumentListComponent implements OnInit, OnDestroy {
 
   navigateToCreate(): void {
     this.router.navigate(['/documents/create']);
+  }
+
+  trackByDocumentId(index: number, document: Document): number {
+    return document.id;
   }
 }
 
