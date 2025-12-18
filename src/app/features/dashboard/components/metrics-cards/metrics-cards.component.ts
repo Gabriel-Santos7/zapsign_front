@@ -28,53 +28,69 @@ import { HttpErrorResponse } from '@angular/common/http';
       </div>
     } @else {
       <div class="metrics-cards-grid">
-        <p-card class="metric-card">
+        <p-card class="metric-card metric-card-primary">
           <ng-template #title>
             <div class="card-title">
-              <i class="pi pi-file" aria-hidden="true"></i>
+              <div class="card-icon icon-primary">
+                <i class="pi pi-file" aria-hidden="true"></i>
+              </div>
               <span>Total de Documentos</span>
             </div>
           </ng-template>
-          <div class="metric-value">{{ metrics()?.total_documents ?? 0 }}</div>
+          <div class="card-content">
+            <div class="metric-value">{{ metrics()?.total_documents ?? 0 }}</div>
+          </div>
         </p-card>
 
-        <p-card class="metric-card">
+        <p-card class="metric-card metric-card-success">
           <ng-template #title>
             <div class="card-title">
-              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              <div class="card-icon icon-success">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+              </div>
               <span>Taxa de Assinatura</span>
             </div>
           </ng-template>
-          <div class="metric-value">
-            {{ signatureRate() }}%
-          </div>
-          <div class="metric-subtitle">
-            {{ metrics()?.signed_documents ?? 0 }} de
-            {{ metrics()?.total_documents ?? 0 }} assinados
+          <div class="card-content">
+            <div class="metric-value success">
+              {{ signatureRate() }}%
+            </div>
+            <div class="metric-subtitle">
+              {{ metrics()?.signed_documents ?? 0 }} de
+              {{ metrics()?.total_documents ?? 0 }} assinados
+            </div>
           </div>
         </p-card>
 
-        <p-card class="metric-card">
+        <p-card class="metric-card metric-card-warning">
           <ng-template #title>
             <div class="card-title">
-              <i class="pi pi-clock" aria-hidden="true"></i>
+              <div class="card-icon icon-warning">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+              </div>
               <span>Documentos Pendentes</span>
             </div>
           </ng-template>
-          <div class="metric-value pending">
-            {{ metrics()?.pending_documents ?? 0 }}
+          <div class="card-content">
+            <div class="metric-value warning">
+              {{ metrics()?.pending_documents ?? 0 }}
+            </div>
           </div>
         </p-card>
 
-        <p-card class="metric-card">
+        <p-card class="metric-card metric-card-info">
           <ng-template #title>
             <div class="card-title">
-              <i class="pi pi-check" aria-hidden="true"></i>
+              <div class="card-icon icon-info">
+                <i class="pi pi-check" aria-hidden="true"></i>
+              </div>
               <span>Documentos Assinados</span>
             </div>
           </ng-template>
-          <div class="metric-value success">
-            {{ metrics()?.signed_documents ?? 0 }}
+          <div class="card-content">
+            <div class="metric-value info">
+              {{ metrics()?.signed_documents ?? 0 }}
+            </div>
           </div>
         </p-card>
       </div>
@@ -83,57 +99,158 @@ import { HttpErrorResponse } from '@angular/common/http';
   styles: `
     .metrics-cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      animation: fadeIn var(--transition-base);
     }
 
     .metric-card {
       height: 100%;
+      transition: all var(--transition-base);
+      border: var(--border-width) solid var(--border-color);
+      background-color: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--border-color-hover);
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity var(--transition-base);
+      }
+
+      &:hover::before {
+        opacity: 1;
+      }
+    }
+
+    .metric-card-primary::before {
+      background: var(--gradient-primary);
+    }
+
+    .metric-card-success::before {
+      background: linear-gradient(135deg, var(--green-500) 0%, var(--green-600) 100%);
+    }
+
+    .metric-card-warning::before {
+      background: linear-gradient(135deg, var(--orange-500) 0%, var(--orange-600) 100%);
+    }
+
+    .metric-card-info::before {
+      background: linear-gradient(135deg, var(--blue-500) 0%, var(--blue-600) 100%);
     }
 
     .card-title {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: var(--spacing-md);
       font-weight: 600;
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-md);
     }
 
-    .card-title i {
-      font-size: 1.25rem;
-      color: var(--primary-color);
+    .card-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--border-radius-md);
+      flex-shrink: 0;
+      transition: all var(--transition-base);
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    .icon-primary {
+      background: var(--primary-100);
+      color: var(--primary-600);
+    }
+
+    .icon-success {
+      background: var(--green-100);
+      color: var(--green-600);
+    }
+
+    .icon-warning {
+      background: var(--orange-100);
+      color: var(--orange-600);
+    }
+
+    .icon-info {
+      background: var(--blue-100);
+      color: var(--blue-600);
+    }
+
+    .card-content {
+      margin-top: var(--spacing-md);
     }
 
     .metric-value {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--text-color);
-      margin-top: 1rem;
-    }
-
-    .metric-value.pending {
-      color: var(--orange-500);
+      font-size: 2.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--spacing-sm);
     }
 
     .metric-value.success {
-      color: var(--green-500);
+      color: var(--green-600);
+    }
+
+    .metric-value.warning {
+      color: var(--orange-600);
+    }
+
+    .metric-value.info {
+      color: var(--blue-600);
     }
 
     .metric-subtitle {
       font-size: 0.875rem;
-      color: var(--text-color-secondary);
-      margin-top: 0.5rem;
+      color: var(--text-tertiary);
+      margin-top: var(--spacing-sm);
+      font-weight: 400;
     }
 
     .error-message {
-      padding: 2rem;
+      padding: var(--spacing-2xl);
       text-align: center;
-      color: var(--red-500);
+      color: var(--red-600);
+      background-color: var(--red-50);
+      border-radius: var(--border-radius-lg);
+      border: var(--border-width) solid var(--red-200);
+    }
+
+    @media (max-width: 1024px) {
+      .metrics-cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: var(--spacing-md);
+      }
     }
 
     @media (max-width: 768px) {
       .metrics-cards-grid {
         grid-template-columns: 1fr;
+      }
+
+      .metric-value {
+        font-size: 2.25rem;
       }
     }
   `,
@@ -163,32 +280,42 @@ export class MetricsCardsComponent implements OnInit {
   }
 
   loadMetrics(): void {
-    const companyId = this.companyService.getCompanyId();
-    if (!companyId) {
-      this.errorSignal.set('Company não encontrada');
-      return;
-    }
-
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.documentService
-      .getMetrics(companyId)
-      .pipe(
-        catchError((err: HttpErrorResponse) => {
-          this.errorSignal.set(
-            err.error?.message || 'Erro ao carregar métricas'
-          );
+    // Tenta carregar a company se não estiver disponível
+    this.companyService.ensureCompanyLoaded().subscribe({
+      next: (company) => {
+        if (!company) {
+          this.errorSignal.set('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
           this.loadingSignal.set(false);
-          return of(null);
-        })
-      )
-      .subscribe((metrics: DocumentMetrics | null) => {
-        if (metrics) {
-          this.metricsSignal.set(metrics);
+          return;
         }
+
+        const companyId = company.id;
+        this.documentService
+          .getMetrics(companyId)
+          .pipe(
+            catchError((err: HttpErrorResponse) => {
+              this.errorSignal.set(
+                err.error?.message || 'Erro ao carregar métricas'
+              );
+              this.loadingSignal.set(false);
+              return of(null);
+            })
+          )
+          .subscribe((metrics: DocumentMetrics | null) => {
+            if (metrics) {
+              this.metricsSignal.set(metrics);
+            }
+            this.loadingSignal.set(false);
+          });
+      },
+      error: (err) => {
+        this.errorSignal.set('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
         this.loadingSignal.set(false);
-      });
+      },
+    });
   }
 }
 

@@ -14,7 +14,17 @@ import { STATUS_LABELS, STATUS_COLORS, SIGNER_STATUS_LABELS, SIGNER_STATUS_COLOR
       [value]="label()"
       [severity]="severity()"
       [ariaLabel]="'Status: ' + label()"
+      styleClass="status-tag"
     />
+  `,
+  styles: `
+    ::ng-deep .status-tag {
+      font-weight: 500;
+      font-size: 0.8125rem;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius-md);
+      letter-spacing: 0.01em;
+    }
   `,
 })
 export class StatusBadgeComponent {

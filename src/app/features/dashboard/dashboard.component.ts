@@ -23,50 +23,101 @@ import { AlertsListComponent } from './components/alerts-list/alerts-list.compon
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dashboard-container">
-      <div class="dashboard-header">
-        <h1>Dashboard</h1>
-        <p-button
-          label="Atualizar"
-          icon="pi pi-refresh"
-          (onClick)="refreshDashboard()"
-          [loading]="refreshing()"
-          ariaLabel="Atualizar dashboard"
-        />
-      </div>
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="title-section">
+            <h1>Dashboard</h1>
+            <p class="subtitle">Visão geral dos seus documentos e métricas</p>
+          </div>
+          <p-button
+            label="Atualizar"
+            icon="pi pi-refresh"
+            (onClick)="refreshDashboard()"
+            [loading]="refreshing()"
+            ariaLabel="Atualizar dashboard"
+            [outlined]="true"
+            styleClass="refresh-button"
+          />
+        </div>
+      </header>
 
-      <app-metrics-cards />
-      <app-metrics-charts />
-      <app-alerts-list />
+      <div class="dashboard-content">
+        <app-metrics-cards />
+        <app-metrics-charts />
+        <app-alerts-list />
+      </div>
     </div>
   `,
   styles: `
     .dashboard-container {
-      padding: 2rem;
+      max-width: 100%;
+      animation: fadeIn var(--transition-base);
     }
 
     .dashboard-header {
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .header-content {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
+      align-items: flex-start;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: var(--spacing-lg);
+    }
+
+    .title-section {
+      flex: 1;
+      min-width: 200px;
     }
 
     .dashboard-header h1 {
-      margin: 0;
+      margin: 0 0 var(--spacing-xs) 0;
       font-size: 2rem;
-      font-weight: 600;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .refresh-button {
+      font-weight: 500;
+    }
+
+    .dashboard-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2xl);
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-header h1 {
+        font-size: 1.75rem;
+      }
     }
 
     @media (max-width: 768px) {
-      .dashboard-container {
-        padding: 1rem;
+      .header-content {
+        flex-direction: column;
+        align-items: stretch;
       }
 
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
+      .refresh-button {
+        width: 100%;
+      }
+
+      .dashboard-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .subtitle {
+        font-size: 0.875rem;
       }
     }
   `,

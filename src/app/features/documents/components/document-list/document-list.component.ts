@@ -4,6 +4,7 @@ import {
   signal,
   computed,
   OnInit,
+  OnDestroy,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -17,7 +18,7 @@ import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, of } from 'rxjs';
+import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { DocumentService } from '../../../../core/services/document.service';
 import { CompanyService } from '../../../../core/services/company.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -47,38 +48,65 @@ import { HttpErrorResponse } from '@angular/common/http';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="document-list-container">
-      <div class="header-actions">
-        <h2>Documentos</h2>
+      <header class="page-header">
+        <div class="header-content">
+          <div class="title-section">
+            <h1>Documentos</h1>
+            <p class="subtitle">Gerencie seus documentos e acompanhe o status das assinaturas</p>
+          </div>
+          <p-button
+            label="Novo Documento"
+            icon="pi pi-plus"
+            (click)="navigateToCreate()"
+            aria-label="Criar novo documento"
+            styleClass="create-button"
+          />
+        </div>
+      </header>
+
+      <div class="filters-section">
         <div class="filters">
-          <p-select
-            [options]="statusOptions()"
-            [(ngModel)]="selectedStatus"
-            placeholder="Filtrar por status"
-            [showClear]="true"
-            (onChange)="onStatusFilterChange()"
-            [ngModelOptions]="{ standalone: true }"
-          />
-          <input
-            type="text"
-            pInputText
-            placeholder="Buscar por nome..."
-            [(ngModel)]="searchTerm"
-            (input)="onSearchChange()"
-            [ngModelOptions]="{ standalone: true }"
-            aria-label="Buscar documentos por nome"
-          />
+          <div class="filter-group">
+            <label for="status-filter" class="filter-label">
+              <i class="pi pi-filter" aria-hidden="true"></i>
+              Status
+            </label>
+            <p-select
+              id="status-filter"
+              [options]="statusOptions()"
+              [(ngModel)]="selectedStatus"
+              placeholder="Todos os status"
+              [showClear]="true"
+              (onChange)="onStatusFilterChange()"
+              [ngModelOptions]="{ standalone: true }"
+              styleClass="status-filter"
+            />
+          </div>
+          <div class="filter-group">
+            <label for="search-input" class="filter-label">
+              <i class="pi pi-search" aria-hidden="true"></i>
+              Buscar
+            </label>
+            <input
+              id="search-input"
+              type="text"
+              pInputText
+              placeholder="Buscar por nome..."
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()"
+              [ngModelOptions]="{ standalone: true }"
+              aria-label="Buscar documentos por nome"
+              class="search-input"
+            />
+          </div>
           <p-button
             label="Atualizar"
             icon="pi pi-refresh"
             (onClick)="refreshDocuments()"
             [loading]="loading()"
             aria-label="Atualizar lista de documentos"
-          />
-          <p-button
-            label="Novo Documento"
-            icon="pi pi-plus"
-            (click)="navigateToCreate()"
-            aria-label="Criar novo documento"
+            [outlined]="true"
+            styleClass="refresh-button"
           />
         </div>
       </div>
@@ -158,7 +186,19 @@ import { HttpErrorResponse } from '@angular/common/http';
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="4" class="text-center">Nenhum documento encontrado</td>
+              <td colspan="4" class="empty-state">
+                <div class="empty-content">
+                  <i class="pi pi-file" aria-hidden="true"></i>
+                  <p>Nenhum documento encontrado</p>
+                  <p-button
+                    label="Criar Documento"
+                    icon="pi pi-plus"
+                    (click)="navigateToCreate()"
+                    [outlined]="true"
+                    styleClass="empty-action-button"
+                  />
+                </div>
+              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -169,43 +209,231 @@ import { HttpErrorResponse } from '@angular/common/http';
   `,
   styles: `
     .document-list-container {
-      padding: 2rem;
+      max-width: 100%;
+      animation: fadeIn var(--transition-base);
     }
 
-    .header-actions {
+    .page-header {
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .header-content {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
+      align-items: flex-start;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: var(--spacing-lg);
+    }
+
+    .title-section {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .page-header h1 {
+      margin: 0 0 var(--spacing-xs) 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .create-button {
+      font-weight: 500;
+    }
+
+    .filters-section {
+      margin-bottom: var(--spacing-xl);
+      padding: var(--spacing-lg);
+      background-color: var(--bg-primary);
+      border-radius: var(--border-radius-lg);
+      border: var(--border-width) solid var(--border-color);
+      box-shadow: var(--shadow-sm);
     }
 
     .filters {
       display: flex;
-      gap: 1rem;
-      align-items: center;
+      gap: var(--spacing-md);
+      align-items: flex-end;
       flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-xs);
+
+      i {
+        font-size: 0.875rem;
+        color: var(--text-tertiary);
+      }
+    }
+
+    .status-filter,
+    .search-input {
+      width: 100%;
+    }
+
+    .refresh-button {
+      font-weight: 500;
+      align-self: flex-end;
     }
 
     .action-buttons {
       display: flex;
-      gap: 0.5rem;
+      gap: var(--spacing-xs);
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      padding: var(--spacing-3xl) var(--spacing-lg);
+    }
+
+    .empty-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-md);
+      text-align: center;
+
+      i {
+        font-size: 3rem;
+        color: var(--text-tertiary);
+        opacity: 0.5;
+      }
+
+      p {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+    }
+
+    .empty-action-button {
+      margin-top: var(--spacing-sm);
     }
 
     .error-message {
-      padding: 2rem;
+      padding: var(--spacing-2xl);
       text-align: center;
-      color: var(--red-500);
+      color: var(--red-600);
+      background-color: var(--red-50);
+      border-radius: var(--border-radius-lg);
+      border: var(--border-width) solid var(--red-200);
+    }
+
+    ::ng-deep .p-datatable {
+      background-color: var(--bg-primary);
+      border-radius: var(--border-radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: var(--border-width) solid var(--border-color);
+
+      .p-datatable-thead > tr > th {
+        background-color: var(--bg-tertiary);
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--border-color);
+        padding: var(--spacing-md);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .p-datatable-tbody > tr {
+        transition: all var(--transition-fast);
+        border-bottom: var(--border-width) solid var(--border-color);
+
+        &:hover {
+          background-color: var(--bg-hover);
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        td {
+          padding: var(--spacing-md);
+          color: var(--text-primary);
+        }
+      }
+
+      .p-datatable-tbody > tr:nth-child(even) {
+        background-color: var(--bg-secondary);
+      }
+
+      .p-datatable-tbody > tr:nth-child(even):hover {
+        background-color: var(--bg-hover);
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .page-header h1 {
+        font-size: 1.75rem;
+      }
+
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        min-width: 100%;
+      }
+
+      .refresh-button {
+        align-self: stretch;
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .subtitle {
+        font-size: 0.875rem;
+      }
+
+      .filters-section {
+        padding: var(--spacing-md);
+      }
+
+      .action-buttons {
+        flex-wrap: wrap;
+      }
     }
   `,
 })
-export class DocumentListComponent implements OnInit {
+export class DocumentListComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private companyService = inject(CompanyService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
+  private readonly destroy$ = new Subject<void>();
+  private isLoadingDocuments = false;
 
   private readonly loadingSignal = signal<boolean>(false);
   private readonly errorSignal = signal<string | null>(null);
@@ -253,47 +481,87 @@ export class DocumentListComponent implements OnInit {
   });
 
   constructor() {
-    this.documentService.documentCreated$.subscribe((): void => {
-      this.refreshDocuments();
-    });
-    this.documentService.documentUpdated$.subscribe((): void => {
-      this.refreshDocuments();
-    });
-    this.documentService.documentDeleted$.subscribe((): void => {
-      this.refreshDocuments();
-    });
+    // Usar takeUntil para gerenciar subscriptions e evitar memory leaks
+    this.documentService.documentCreated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((): void => {
+        this.refreshDocuments();
+      });
+    
+    this.documentService.documentUpdated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((): void => {
+        this.refreshDocuments();
+      });
+    
+    this.documentService.documentDeleted$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((): void => {
+        this.refreshDocuments();
+      });
   }
 
   ngOnInit(): void {
     this.loadDocuments();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadDocuments(): void {
-    const companyId = this.companyService.getCompanyId();
-    if (!companyId) {
-      this.errorSignal.set('Company não encontrada');
+    // Evitar múltiplas chamadas simultâneas
+    if (this.isLoadingDocuments) {
       return;
     }
 
+    this.isLoadingDocuments = true;
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.documentService
-      .getDocuments(companyId, this.currentPage(), this.pageSize())
+    // Tenta carregar a company se não estiver disponível
+    this.companyService.ensureCompanyLoaded()
       .pipe(
-        catchError((err: HttpErrorResponse | Error) => {
-          const errorMessage = err instanceof HttpErrorResponse
-            ? err.error?.message || err.message || 'Erro ao carregar documentos'
-            : err.message || 'Erro ao carregar documentos';
-          this.errorSignal.set(errorMessage);
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          this.errorSignal.set('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
           this.loadingSignal.set(false);
-          return of({ count: 0, results: [], next: null, previous: null } as PaginatedResponse<Document>);
+          this.isLoadingDocuments = false;
+          return of(null);
         })
       )
-      .subscribe((response: PaginatedResponse<Document>) => {
-        this.documentsSignal.set(response.results);
-        this.totalRecordsSignal.set(response.count);
-        this.loadingSignal.set(false);
+      .subscribe({
+        next: (company) => {
+          if (!company) {
+            this.errorSignal.set('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
+            this.loadingSignal.set(false);
+            this.isLoadingDocuments = false;
+            return;
+          }
+
+          const companyId = company.id;
+          this.documentService
+            .getDocuments(companyId, this.currentPage(), this.pageSize())
+            .pipe(
+              takeUntil(this.destroy$),
+              catchError((err: HttpErrorResponse | Error) => {
+                const errorMessage = err instanceof HttpErrorResponse
+                  ? err.error?.message || err.message || 'Erro ao carregar documentos'
+                  : err.message || 'Erro ao carregar documentos';
+                this.errorSignal.set(errorMessage);
+                this.loadingSignal.set(false);
+                this.isLoadingDocuments = false;
+                return of({ count: 0, results: [], next: null, previous: null } as PaginatedResponse<Document>);
+              })
+            )
+            .subscribe((response: PaginatedResponse<Document>) => {
+              this.documentsSignal.set(response.results);
+              this.totalRecordsSignal.set(response.count);
+              this.loadingSignal.set(false);
+              this.isLoadingDocuments = false;
+            });
+        },
       });
   }
 
@@ -314,6 +582,8 @@ export class DocumentListComponent implements OnInit {
   }
 
   refreshDocuments(): void {
+    // Resetar flag para permitir nova requisição
+    this.isLoadingDocuments = false;
     this.currentPageSignal.set(1);
     this.loadDocuments();
   }
@@ -344,23 +614,34 @@ export class DocumentListComponent implements OnInit {
   }
 
   deleteDocument(id: number): void {
-    const companyId = this.companyService.getCompanyId();
-    if (!companyId) {
-      this.notificationService.showError('Company não encontrada');
-      return;
-    }
+    this.companyService.ensureCompanyLoaded()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (company) => {
+          if (!company) {
+            this.notificationService.showError('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
+            return;
+          }
 
-    this.documentService.deleteDocument(companyId, id).subscribe({
-      next: () => {
-        this.notificationService.showSuccess('Documento excluído com sucesso');
-        this.refreshDocuments();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.notificationService.showError(
-          err.error?.message || 'Erro ao excluir documento'
-        );
-      },
-    });
+          const companyId = company.id;
+          this.documentService.deleteDocument(companyId, id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                this.notificationService.showSuccess('Documento excluído com sucesso');
+                this.refreshDocuments();
+              },
+              error: (err: HttpErrorResponse) => {
+                this.notificationService.showError(
+                  err.error?.message || 'Erro ao excluir documento'
+                );
+              },
+            });
+        },
+        error: () => {
+          this.notificationService.showError('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
+        },
+      });
   }
 
   navigateToCreate(): void {

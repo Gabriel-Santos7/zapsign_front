@@ -39,35 +39,67 @@ import { NotificationToastComponent } from '../notification-toast/notification-t
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      background-color: var(--bg-secondary);
     }
 
     .layout-content {
       display: flex;
       flex: 1;
       overflow: hidden;
-      margin-top: 60px; /* Altura do header */
+      margin-top: 64px; /* Altura do header */
+      position: relative;
     }
 
     .main-content {
       flex: 1;
-      margin-left: 250px;
+      margin-left: 260px;
       overflow-y: auto;
-      background-color: var(--surface-ground);
-      transition: margin-left 0.3s ease;
-      padding: 0;
+      overflow-x: hidden;
+      background: var(--gradient-subtle);
+      transition: margin-left var(--transition-slow) ease;
+      padding: var(--spacing-xl);
+      min-height: calc(100vh - 64px);
     }
 
     .main-content.sidebar-collapsed {
-      margin-left: 60px;
+      margin-left: 72px;
+    }
+
+    /* Scrollbar customizada para o conteúdo principal */
+    .main-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .main-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .main-content::-webkit-scrollbar-thumb {
+      background: var(--gray-300);
+      border-radius: var(--border-radius-full);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+
+      &:hover {
+        background: var(--gray-400);
+        background-clip: padding-box;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .main-content {
+        padding: var(--spacing-lg);
+      }
     }
 
     @media (max-width: 768px) {
       .layout-content {
-        padding-top: 0;
+        margin-top: 64px;
       }
 
       .main-content {
         margin-left: 0;
+        padding: var(--spacing-md);
       }
 
       .main-content.sidebar-collapsed {

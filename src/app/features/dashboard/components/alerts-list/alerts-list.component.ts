@@ -96,71 +96,84 @@ import { HttpErrorResponse } from '@angular/common/http';
     }
 
     .alert-item {
-      padding: 1rem;
-      border-radius: 4px;
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius-md);
       border-left: 4px solid;
-      background-color: var(--surface-ground);
+      background-color: var(--bg-secondary);
+      border: var(--border-width) solid var(--border-color);
+      transition: all var(--transition-base);
+
+      &:hover {
+        background-color: var(--bg-tertiary);
+        box-shadow: var(--shadow-sm);
+      }
     }
 
     .alert-item.alert-info {
       border-left-color: var(--blue-500);
+      background-color: var(--blue-50);
     }
 
     .alert-item.alert-warning {
       border-left-color: var(--orange-500);
+      background-color: var(--orange-50);
     }
 
     .alert-item.alert-error {
       border-left-color: var(--red-500);
+      background-color: var(--red-50);
     }
 
     .alert-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: var(--spacing-sm);
     }
 
     .alert-date {
       font-size: 0.875rem;
-      color: var(--text-color-secondary);
+      color: var(--text-tertiary);
     }
 
     .alert-message {
       font-weight: 500;
-      margin-bottom: 0.75rem;
-      color: var(--text-color);
+      margin-bottom: var(--spacing-md);
+      color: var(--text-primary);
     }
 
     .alert-document {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 1rem;
+      gap: var(--spacing-md);
     }
 
     .document-name {
       font-size: 0.875rem;
-      color: var(--text-color-secondary);
+      color: var(--text-tertiary);
       flex: 1;
     }
 
     .empty-message {
       text-align: center;
-      padding: 2rem;
-      color: var(--text-color-secondary);
+      padding: var(--spacing-2xl);
+      color: var(--text-tertiary);
     }
 
     .empty-message i {
       font-size: 3rem;
       color: var(--green-500);
-      margin-bottom: 1rem;
+      margin-bottom: var(--spacing-md);
     }
 
     .error-message {
-      padding: 2rem;
+      padding: var(--spacing-lg);
       text-align: center;
-      color: var(--red-500);
+      color: var(--red-600);
+      background-color: var(--red-50);
+      border-radius: var(--border-radius-md);
+      border: var(--border-width) solid var(--red-200);
     }
 
     @media (max-width: 768px) {
@@ -197,28 +210,38 @@ export class AlertsListComponent implements OnInit {
   }
 
   loadAlerts(): void {
-    const companyId = this.companyService.getCompanyId();
-    if (!companyId) {
-      this.errorSignal.set('Company não encontrada');
-      return;
-    }
-
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.documentService
-      .getAlerts(companyId)
-      .pipe(
-        catchError((err: HttpErrorResponse) => {
-          this.errorSignal.set(err.error?.message || 'Erro ao carregar alertas');
+    // Tenta carregar a company se não estiver disponível
+    this.companyService.ensureCompanyLoaded().subscribe({
+      next: (company) => {
+        if (!company) {
+          this.errorSignal.set('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
           this.loadingSignal.set(false);
-          return of({ alerts: [], count: 0 });
-        })
-      )
-      .subscribe((response) => {
-        this.alertsSignal.set(response.alerts);
+          return;
+        }
+
+        const companyId = company.id;
+        this.documentService
+          .getAlerts(companyId)
+          .pipe(
+            catchError((err: HttpErrorResponse) => {
+              this.errorSignal.set(err.error?.message || 'Erro ao carregar alertas');
+              this.loadingSignal.set(false);
+              return of({ alerts: [], count: 0 });
+            })
+          )
+          .subscribe((response) => {
+            this.alertsSignal.set(response.alerts);
+            this.loadingSignal.set(false);
+          });
+      },
+      error: (err) => {
+        this.errorSignal.set('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
         this.loadingSignal.set(false);
-      });
+      },
+    });
   }
 }
 
