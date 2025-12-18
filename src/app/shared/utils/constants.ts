@@ -1,5 +1,8 @@
 import { DocumentStatus } from '../models/document.model';
 import { SignerStatus } from '../models/signer.model';
+import { environment } from '../../../environments/environment';
+
+export const API_BASE_URL = environment.apiUrl;
 
 export const STATUS_LABELS: Record<DocumentStatus, string> = {
   pending: 'Pendente',

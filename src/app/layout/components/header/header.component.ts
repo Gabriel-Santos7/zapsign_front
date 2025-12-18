@@ -5,7 +5,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MenubarModule } from 'primeng/menubar';
 import { ButtonModule } from 'primeng/button';
 import { MenuItem } from 'primeng/api';
@@ -14,7 +14,7 @@ import { CompanyService } from '../../../core/services/company.service';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, MenubarModule, ButtonModule],
+  imports: [CommonModule, MenubarModule, ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <p-menubar [model]="menuItems()" [style]="{ borderRadius: 0 }">

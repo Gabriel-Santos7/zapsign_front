@@ -17,14 +17,13 @@ import { MenuItem } from 'primeng/api';
   template: `
     <div class="sidebar" [class.collapsed]="collapsed()">
       <div class="sidebar-header">
-        <button
-          pButton
+        <p-button
           icon="pi pi-bars"
           [text]="true"
           (onClick)="toggleCollapse()"
           [ariaLabel]="collapsed() ? 'Expandir menu' : 'Colapsar menu'"
           [attr.aria-expanded]="!collapsed()"
-        />
+        ></p-button>
       </div>
       <nav class="sidebar-nav" [attr.aria-label]="'Navegação principal'">
         <ul class="nav-list">
