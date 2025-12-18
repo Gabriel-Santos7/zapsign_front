@@ -158,12 +158,13 @@ import { HttpErrorResponse } from '@angular/common/http';
     .empty-message {
       text-align: center;
       padding: var(--spacing-2xl);
-      color: var(--text-tertiary);
+      background-color: var(--bg-primary) !important;
+      color: var(--text-tertiary) !important;
     }
 
     .empty-message i {
       font-size: 3rem;
-      color: var(--green-500);
+      color: var(--green-500) !important;
       margin-bottom: var(--spacing-md);
     }
 

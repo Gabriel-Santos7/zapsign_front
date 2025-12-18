@@ -20,6 +20,15 @@ body {
   background-color: var(--bg-secondary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light; /* Forçar modo claro */
+}
+
+/* Garantir que dark mode não seja aplicado */
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    color-scheme: light !important;
+  }
 }
 
 app-root {
@@ -311,13 +320,13 @@ a {
   }
 }
 
-.p-inputtext,
-.p-password input {
+.p-inputtext {
   width: 100%;
   transition: all var(--transition-base);
   border-color: var(--border-color);
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  padding: 0.625rem 0.75rem;
 
   &:focus {
     border-color: var(--primary-color);
@@ -327,6 +336,119 @@ a {
 
   &:hover:not(:focus) {
     border-color: var(--border-color-hover);
+  }
+}
+
+/* Password component - estilos específicos */
+.p-password,
+.p-inputwrapper.p-password,
+[data-pc-name="password"],
+.p-component.p-password {
+  width: 100%;
+  position: relative;
+  display: block;
+
+  /* Remover qualquer estilo de wrapper que possa criar aparência de dois inputs */
+  .p-inputwrapper,
+  [data-pc-section="root"] {
+    width: 100% !important;
+    position: relative !important;
+    display: block !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* Input único e limpo - mesmo padding do input de usuário, exceto padding-right para o botão */
+  .p-password-input,
+  input[type="password"],
+  input[type="text"],
+  [data-pc-section="input"] {
+    width: 100% !important;
+    transition: all var(--transition-base);
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--border-radius-md) !important;
+    border: var(--border-width) solid var(--border-color) !important;
+    padding: 0.625rem 2.5rem 0.625rem 0.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+    min-height: auto !important;
+    height: auto !important;
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 3px var(--primary-100) !important;
+      outline: none !important;
+    }
+
+    &:hover:not(:focus) {
+      border-color: var(--border-color-hover) !important;
+    }
+  }
+
+  /* Botão toggle - posicionado dentro do input */
+  .p-password-toggle,
+  [data-pc-section="toggle"],
+  button[type="button"],
+  button.p-password-toggle {
+    position: absolute !important;
+    right: 0.5rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-tertiary) !important;
+    cursor: pointer;
+    padding: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: color var(--transition-base);
+    z-index: 10;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    min-width: auto !important;
+
+    &:hover {
+      color: var(--primary-color) !important;
+      background: transparent !important;
+    }
+
+    &:focus {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+      border-radius: 4px;
+      color: var(--primary-color) !important;
+    }
+
+    i {
+      font-size: 1rem;
+      margin: 0;
+    }
+  }
+
+  &.p-inputwrapper-focus .p-password-toggle,
+  &.p-inputwrapper-focus [data-pc-section="toggle"],
+  &.p-inputwrapper-focus button[type="button"],
+  .p-inputwrapper-focus .p-password-toggle {
+    color: var(--primary-color) !important;
+  }
+
+  /* Garantir que não haja bordas ou backgrounds duplicados */
+  &,
+  .p-inputwrapper,
+  [data-pc-section="root"] {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 }
 
@@ -771,12 +893,84 @@ a {
   }
 }
 
+/* Estilos específicos para listbox e options */
+.p-select-list,
+.p-dropdown-list,
+ul[role="listbox"],
+ul[role="listbox"] li,
+[data-pc-section="list"],
+[data-pc-section="list"] li,
+[data-pc-section="list"] [role="option"] {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+ul[role="listbox"] li,
+[data-pc-section="list"] li,
+[role="option"] {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  cursor: pointer;
+  transition: all var(--transition-base);
+
+  &:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+  }
+
+  &[aria-selected="true"],
+  &.p-highlight {
+    background-color: var(--bg-active) !important;
+    color: var(--primary-color) !important;
+    font-weight: 500;
+  }
+
+  &[aria-selected="true"]:hover {
+    background-color: var(--bg-active) !important;
+    color: var(--primary-color) !important;
+  }
+}
+
 .p-select-panel,
 .p-dropdown-panel,
 .p-overlaypanel {
   background-color: var(--bg-primary) !important;
   border-color: var(--border-color) !important;
   box-shadow: var(--shadow-lg) !important;
+
+  .p-select-item,
+  .p-dropdown-item,
+  [data-pc-section="item"],
+  .p-select-list,
+  .p-dropdown-list,
+  ul[role="listbox"],
+  [data-pc-section="list"] {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+
+    li,
+    [role="option"],
+    * {
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
+    }
+
+    li:hover,
+    [role="option"]:hover {
+      background-color: var(--bg-hover) !important;
+      color: var(--text-primary) !important;
+    }
+
+    li[aria-selected="true"],
+    [role="option"][aria-selected="true"],
+    li.p-highlight,
+    [role="option"].p-highlight {
+      background-color: var(--bg-active) !important;
+      color: var(--primary-color) !important;
+    }
+  }
 
   .p-select-item,
   .p-dropdown-item,
@@ -826,8 +1020,153 @@ a {
 }
 
 [data-pc-section="body"],
-[data-pc-section="content"] {
+[data-pc-section="content"],
+[data-pc-section="root"] {
   background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Garantir que todos os elementos dentro de componentes PrimeNG sejam claros */
+.p-component *,
+[class*="p-"] * {
+  color: inherit;
+}
+
+/* Forçar cores claras em elementos específicos que podem estar escuros */
+.p-paginator *,
+.p-datatable *,
+.p-card *,
+.p-dialog *,
+.p-overlaypanel *,
+.p-select-panel *,
+.p-dropdown-panel *,
+.p-select-list *,
+.p-dropdown-list *,
+[data-pc-section="list"] *,
+[role="listbox"] * {
+  color: var(--text-primary) !important;
+}
+
+/* Estilos muito específicos para select list - sobrescrever qualquer tema escuro */
+ul.p-select-list,
+ul.p-select-list li,
+.p-select-list,
+.p-select-list li,
+[id*="_list"],
+[id*="_list"] li,
+[data-pc-section="list"],
+[data-pc-section="list"] li,
+[role="listbox"],
+[role="listbox"] li,
+[role="listbox"] [role="option"] {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  
+  span,
+  div,
+  text {
+    color: #111827 !important;
+    background-color: transparent !important;
+  }
+}
+
+ul.p-select-list li:hover,
+.p-select-list li:hover,
+[id*="_list"] li:hover,
+[data-pc-section="list"] li:hover,
+[role="listbox"] li:hover,
+[role="listbox"] [role="option"]:hover {
+  background-color: #f3f4f6 !important;
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+ul.p-select-list li[aria-selected="true"],
+.p-select-list li[aria-selected="true"],
+[id*="_list"] li[aria-selected="true"],
+[data-pc-section="list"] li[aria-selected="true"],
+[role="listbox"] li[aria-selected="true"],
+[role="listbox"] [role="option"][aria-selected="true"],
+ul.p-select-list li.p-highlight,
+.p-select-list li.p-highlight {
+  background-color: #eff6ff !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 500 !important;
+}
+
+/* Garantir que listas e options sejam claras */
+ul.p-select-list,
+ul.p-dropdown-list,
+ul[role="listbox"],
+.p-select-list,
+.p-dropdown-list,
+[data-pc-section="list"] {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  
+  li,
+  [role="option"],
+  * {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+  
+  li:hover,
+  [role="option"]:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+  }
+  
+  li[aria-selected="true"],
+  [role="option"][aria-selected="true"],
+  li.p-highlight,
+  [role="option"].p-highlight {
+    background-color: var(--bg-active) !important;
+    color: var(--primary-color) !important;
+  }
+}
+
+/* Estilos específicos para elementos dentro do select list */
+#status-filter_list,
+[id*="_list"],
+.p-select-list li,
+.p-dropdown-list li,
+[data-pc-section="list"] li {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  
+  &:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+  }
+  
+  &[aria-selected="true"],
+  &.p-highlight {
+    background-color: var(--bg-active) !important;
+    color: var(--primary-color) !important;
+    font-weight: 500;
+  }
+}
+
+/* Garantir que textos dentro de tabelas sejam claros */
+.p-datatable tbody td,
+.p-datatable thead th,
+.p-datatable tfoot td {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-datatable tbody tr:nth-child(even) td {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-datatable tbody tr:hover td {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Sidebar navigation - garantir texto claro em itens ativos */
@@ -850,6 +1189,461 @@ a.nav-item.active span {
       color: var(--primary-700) !important;
     }
   }
+}
+
+/* Paginator - tema claro */
+.p-paginator,
+[data-pc-name="pcpaginator"],
+[data-pc-section="root"] {
+  background-color: var(--bg-primary) !important;
+  border: var(--border-width) solid var(--border-color) !important;
+  border-radius: var(--border-radius-md) !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  color: var(--text-primary) !important;
+
+  * {
+    color: var(--text-primary) !important;
+  }
+
+  .p-paginator-pages,
+  [data-pc-section="pages"] {
+    .p-paginator-page,
+    [data-pc-section="page"] {
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border-color) !important;
+
+      &:hover {
+        background-color: var(--bg-hover) !important;
+        color: var(--primary-color) !important;
+      }
+
+      &.p-highlight,
+      &[aria-current="page"] {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+        border-color: var(--primary-color) !important;
+      }
+    }
+  }
+
+  .p-paginator-first,
+  .p-paginator-prev,
+  .p-paginator-next,
+  .p-paginator-last,
+  [data-pc-section="firstPage"],
+  [data-pc-section="prevPage"],
+  [data-pc-section="nextPage"],
+  [data-pc-section="lastPage"] {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+
+    &:hover:not(:disabled) {
+      background-color: var(--bg-hover) !important;
+      color: var(--primary-color) !important;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      color: var(--text-tertiary) !important;
+    }
+  }
+
+  .p-paginator-current,
+  [data-pc-section="current"] {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .p-dropdown,
+  [data-pc-section="rowsPerPageDropdown"] {
+    background-color: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+
+    .p-dropdown-label {
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
+    }
+  }
+
+  button,
+  [role="button"] {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+
+    &:hover:not(:disabled) {
+      background-color: var(--bg-hover) !important;
+      color: var(--primary-color) !important;
+    }
+  }
+
+  span,
+  .p-paginator-pages {
+    color: var(--text-primary) !important;
+  }
+}
+
+/* Empty states - tema claro */
+.empty-state,
+.empty-content,
+.empty-message,
+td.empty-state,
+td.empty-state *,
+div.empty-content,
+div.empty-content * {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-secondary) !important;
+
+  p,
+  span,
+  div {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-secondary) !important;
+  }
+
+  i {
+    color: var(--text-tertiary) !important;
+  }
+
+  button,
+  .p-button {
+    background-color: var(--bg-primary) !important;
+    color: var(--primary-color) !important;
+  }
+}
+
+/* Loading component - tema claro */
+.p-progress-spinner,
+.p-progressbar {
+  background-color: var(--bg-secondary) !important;
+}
+
+.p-progress-spinner-circle {
+  stroke: var(--primary-color) !important;
+}
+
+/* Tooltip - tema claro */
+.p-tooltip {
+  background-color: var(--gray-800) !important;
+  color: white !important;
+  border-color: var(--gray-800) !important;
+}
+
+.p-tooltip-text {
+  color: white !important;
+}
+
+/* Tag/Badge - garantir cores claras */
+.p-tag {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+
+  &.p-tag-success {
+    background-color: var(--green-100) !important;
+    color: var(--green-700) !important;
+  }
+
+  &.p-tag-info {
+    background-color: var(--blue-100) !important;
+    color: var(--blue-700) !important;
+  }
+
+  &.p-tag-warning {
+    background-color: var(--orange-100) !important;
+    color: var(--orange-700) !important;
+  }
+
+  &.p-tag-danger {
+    background-color: var(--red-100) !important;
+    color: var(--red-700) !important;
+  }
+}
+
+/* ConfirmDialog - tema claro */
+.p-confirm-dialog {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+
+  .p-confirm-dialog-header {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+  }
+
+  .p-confirm-dialog-content {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .p-confirm-dialog-footer {
+    background-color: var(--bg-secondary) !important;
+    border-top-color: var(--border-color) !important;
+  }
+}
+
+/* OverlayPanel - tema claro */
+.p-overlaypanel {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--shadow-lg) !important;
+
+  .p-overlaypanel-content {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+}
+
+/* InputNumber, InputSwitch e outros inputs - tema claro */
+.p-inputnumber,
+.p-inputswitch,
+.p-slider {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-inputswitch-slider {
+  background-color: var(--gray-300) !important;
+
+  &:before {
+    background-color: white !important;
+  }
+}
+
+.p-inputswitch-checked .p-inputswitch-slider {
+  background-color: var(--primary-color) !important;
+}
+
+/* FileUpload - tema claro */
+.p-fileupload {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+
+  .p-fileupload-buttonbar {
+    background-color: var(--bg-tertiary) !important;
+    border-bottom-color: var(--border-color) !important;
+  }
+
+  .p-fileupload-content {
+    background-color: var(--bg-primary) !important;
+  }
+}
+
+/* Messages/Toast - garantir backgrounds claros */
+.p-message {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+
+  &.p-message-success {
+    background-color: var(--green-50) !important;
+    border-color: var(--green-200) !important;
+    color: var(--green-800) !important;
+  }
+
+  &.p-message-info {
+    background-color: var(--blue-50) !important;
+    border-color: var(--blue-200) !important;
+    color: var(--blue-800) !important;
+  }
+
+  &.p-message-warn {
+    background-color: var(--orange-50) !important;
+    border-color: var(--orange-200) !important;
+    color: var(--orange-800) !important;
+  }
+
+  &.p-message-error {
+    background-color: var(--red-50) !important;
+    border-color: var(--red-200) !important;
+    color: var(--red-800) !important;
+  }
+}
+
+/* Sidebar - garantir tema claro */
+.p-sidebar {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* TabView - tema claro */
+.p-tabview {
+  .p-tabview-nav {
+    background-color: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+
+    .p-tabview-nav-link {
+      background-color: var(--bg-primary) !important;
+      color: var(--text-secondary) !important;
+      border-color: var(--border-color) !important;
+
+      &:hover {
+        background-color: var(--bg-hover) !important;
+        color: var(--primary-color) !important;
+      }
+
+      &.p-highlight {
+        background-color: var(--bg-primary) !important;
+        color: var(--primary-color) !important;
+        border-bottom-color: var(--primary-color) !important;
+      }
+    }
+  }
+
+  .p-tabview-panels {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+}
+
+/* Accordion - tema claro */
+.p-accordion {
+  .p-accordion-header {
+    background-color: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+
+    .p-accordion-header-link {
+      background-color: var(--bg-primary) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border-color) !important;
+
+      &:hover {
+        background-color: var(--bg-hover) !important;
+      }
+    }
+  }
+
+  .p-accordion-content {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+}
+
+/* Panel - tema claro */
+.p-panel {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+
+  .p-panel-header {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+  }
+
+  .p-panel-content {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+  }
+}
+
+/* ============================================
+   Override Final - Garantir tema claro em TODOS os elementos
+   ============================================ */
+/* Regra de alta especificidade para sobrescrever qualquer tema escuro */
+.p-select-panel,
+.p-dropdown-panel {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.p-select-panel .p-select-list,
+.p-dropdown-panel .p-dropdown-list,
+.p-select-panel ul[role="listbox"],
+.p-dropdown-panel ul[role="listbox"],
+.p-select-panel [data-pc-section="list"],
+.p-dropdown-panel [data-pc-section="list"],
+[id*="_list"],
+[id*="_list"] li,
+[id*="_list"] [role="option"],
+.p-select-list,
+.p-select-list li,
+.p-select-list [role="option"],
+ul.p-select-list,
+ul.p-select-list li,
+ul.p-select-list [role="option"],
+[role="listbox"].p-select-list,
+[role="listbox"].p-select-list li,
+[role="listbox"].p-select-list [role="option"] {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  
+  &,
+  *,
+  span,
+  div {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+}
+
+.p-select-panel .p-select-list li,
+.p-dropdown-panel .p-dropdown-list li,
+[id*="_list"] li,
+[id*="_list"] [role="option"],
+.p-select-list li,
+.p-select-list [role="option"],
+ul.p-select-list li,
+ul.p-select-list [role="option"],
+[role="listbox"] li,
+[role="listbox"] [role="option"] {
+  padding: 0.625rem 1rem !important;
+  transition: all 150ms ease-in-out !important;
+  cursor: pointer !important;
+  border-radius: 6px !important;
+  margin: 2px 4px !important;
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  display: flex !important;
+  align-items: center !important;
+  
+  &:first-child {
+    margin-top: 4px !important;
+  }
+  
+  &:last-child {
+    margin-bottom: 4px !important;
+  }
+}
+
+.p-select-panel .p-select-list li:hover,
+.p-dropdown-panel .p-dropdown-list li:hover,
+[id*="_list"] li:hover,
+[id*="_list"] [role="option"]:hover,
+.p-select-list li:hover,
+.p-select-list [role="option"]:hover,
+ul.p-select-list li:hover,
+ul.p-select-list [role="option"]:hover {
+  background-color: #f3f4f6 !important;
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.p-select-panel .p-select-list li[aria-selected="true"],
+.p-dropdown-panel .p-dropdown-list li[aria-selected="true"],
+[id*="_list"] li[aria-selected="true"],
+[id*="_list"] [role="option"][aria-selected="true"],
+.p-select-list li[aria-selected="true"],
+.p-select-list [role="option"][aria-selected="true"],
+ul.p-select-list li[aria-selected="true"],
+ul.p-select-list [role="option"][aria-selected="true"],
+.p-select-panel .p-select-list li.p-highlight,
+.p-dropdown-panel .p-dropdown-list li.p-highlight,
+.p-select-list li.p-highlight,
+ul.p-select-list li.p-highlight {
+  background-color: #eff6ff !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 500 !important;
 }
 
 /* ============================================

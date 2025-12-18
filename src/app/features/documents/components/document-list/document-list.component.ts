@@ -308,6 +308,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 
     .empty-state {
       padding: var(--spacing-3xl) var(--spacing-lg);
+      background-color: var(--bg-primary) !important;
+      color: var(--text-secondary) !important;
     }
 
     .empty-content {
@@ -316,17 +318,19 @@ import { HttpErrorResponse } from '@angular/common/http';
       align-items: center;
       gap: var(--spacing-md);
       text-align: center;
+      background-color: var(--bg-primary) !important;
+      color: var(--text-secondary) !important;
 
       i {
         font-size: 3rem;
-        color: var(--text-tertiary);
+        color: var(--text-tertiary) !important;
         opacity: 0.5;
       }
 
       p {
         margin: 0;
         font-size: 1rem;
-        color: var(--text-secondary);
+        color: var(--text-secondary) !important;
         font-weight: 500;
       }
     }

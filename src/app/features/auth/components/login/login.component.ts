@@ -15,7 +15,6 @@ import {
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { PasswordModule } from 'primeng/password';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CompanyService } from '../../../../core/services/company.service';
@@ -41,7 +40,6 @@ interface LoginResponse {
     CardModule,
     InputTextModule,
     ButtonModule,
-    PasswordModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -92,18 +90,17 @@ interface LoginResponse {
               <i class="pi pi-lock" aria-hidden="true"></i>
               Senha
             </label>
-            <p-password
+            <input
               id="password"
+              type="password"
+              pInputText
               formControlName="password"
-              [feedback]="false"
-              [toggleMask]="true"
               [class.ng-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
               aria-required="true"
               aria-describedby="password-error"
-              [inputStyle]="{ width: '100%' }"
               autocomplete="current-password"
               placeholder="Digite sua senha"
-              styleClass="password-input"
+              class="form-input"
             />
             @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
               <small id="password-error" class="error-message" role="alert">
@@ -330,13 +327,6 @@ interface LoginResponse {
       }
     }
 
-    ::ng-deep .password-input {
-      width: 100%;
-
-      .p-password-input {
-        width: 100%;
-      }
-    }
 
     @media (max-width: 768px) {
       .login-container {

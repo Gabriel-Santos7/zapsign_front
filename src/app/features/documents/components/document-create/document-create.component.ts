@@ -331,9 +331,30 @@ export class DocumentCreateComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.submittingSignal.set(false);
-        this.notificationService.showError(
-          err.error?.message || 'Erro ao criar documento'
-        );
+        
+        let errorMessage = 'Erro ao criar documento';
+        
+        if (err.error) {
+          // Tenta pegar a mensagem de erro do backend
+          if (err.error.message) {
+            errorMessage = err.error.message;
+          } else if (err.error.detail) {
+            errorMessage = err.error.detail;
+          } else if (err.error.error) {
+            errorMessage = err.error.error;
+          } else if (typeof err.error === 'string') {
+            errorMessage = err.error;
+          }
+        }
+        
+        // Mensagens específicas para erros conhecidos
+        if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+          errorMessage = 'A URL do PDF não está acessível publicamente. Verifique se o arquivo está disponível e não requer autenticação.';
+        } else if (errorMessage.includes('baixar') || errorMessage.includes('download')) {
+          errorMessage = 'Não foi possível acessar o PDF na URL fornecida. Verifique se a URL está correta e acessível.';
+        }
+        
+        this.notificationService.showError(errorMessage);
       },
     });
   }
