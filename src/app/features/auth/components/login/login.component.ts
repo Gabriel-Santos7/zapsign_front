@@ -20,7 +20,6 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CompanyService } from '../../../../core/services/company.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
 import { API_BASE_URL } from '../../../../shared/utils/constants';
 import { catchError, of } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -43,7 +42,6 @@ interface LoginResponse {
     InputTextModule,
     ButtonModule,
     PasswordModule,
-    LoadingComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -197,23 +195,16 @@ export class LoginComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  loginForm!: FormGroup;
+  loginForm: FormGroup = this.fb.group({
+    username: ['', [Validators.required]],
+    password: ['', [Validators.required]],
+  });
+  
   private readonly submittingSignal = signal<boolean>(false);
   private readonly errorSignal = signal<string | null>(null);
 
   submitting = this.submittingSignal.asReadonly();
   error = this.errorSignal.asReadonly();
-
-  constructor() {
-    this.initForm();
-  }
-
-  initForm(): void {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-    });
-  }
 
   onSubmit(): void {
     if (this.loginForm.invalid) {

@@ -11,6 +11,11 @@ export const routes: Routes = [
   },
   {
     path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full',
+  },
+  {
+    path: '',
     loadComponent: () =>
       import('./layout/components/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
@@ -30,11 +35,6 @@ export const routes: Routes = [
           import('./features/documents/documents.routes').then(
             (m) => m.documentsRoutes
           ),
-      },
-      {
-        path: '',
-        redirectTo: '/dashboard',
-        pathMatch: 'full',
       },
     ],
   },
