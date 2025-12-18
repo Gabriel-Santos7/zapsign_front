@@ -11,7 +11,7 @@ export const STATUS_LABELS: Record<DocumentStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<DocumentStatus, string> = {
-  pending: 'warning',
+  pending: 'warn',
   in_progress: 'info',
   completed: 'success',
   cancelled: 'secondary',
@@ -28,7 +28,7 @@ export const SIGNER_STATUS_LABELS: Record<SignerStatus, string> = {
 };
 
 export const SIGNER_STATUS_COLORS: Record<SignerStatus, string> = {
-  pending: 'warning',
+  pending: 'warn',
   in_progress: 'info',
   signed: 'success',
   rejected: 'danger',

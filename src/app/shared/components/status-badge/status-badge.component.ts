@@ -28,12 +28,12 @@ export class StatusBadgeComponent {
     return SIGNER_STATUS_LABELS[s];
   });
 
-  severity = computed(() => {
+  severity = computed((): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | null => {
     const s = this.status();
     if (this.isDocumentStatus(s)) {
-      return STATUS_COLORS[s];
+      return STATUS_COLORS[s] as 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
     }
-    return SIGNER_STATUS_COLORS[s];
+    return SIGNER_STATUS_COLORS[s] as 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
   });
 
   private isDocumentStatus(

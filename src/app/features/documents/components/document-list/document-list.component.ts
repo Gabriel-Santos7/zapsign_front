@@ -10,6 +10,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
+import type { TableLazyLoadEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -31,7 +32,6 @@ import { HttpErrorResponse } from '@angular/common/http';
   selector: 'app-document-list',
   imports: [
     CommonModule,
-    RouterLink,
     FormsModule,
     TableModule,
     ButtonModule,
@@ -297,10 +297,11 @@ export class DocumentListComponent implements OnInit {
       });
   }
 
-  onLazyLoad(event: { first?: number; rows: number }): void {
+  onLazyLoad(event: TableLazyLoadEvent): void {
     const first = event.first ?? 0;
-    this.currentPageSignal.set((first / event.rows) + 1);
-    this.pageSizeSignal.set(event.rows);
+    const rows = event.rows ?? 20;
+    this.currentPageSignal.set((first / rows) + 1);
+    this.pageSizeSignal.set(rows);
     this.loadDocuments();
   }
 
