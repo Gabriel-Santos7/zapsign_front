@@ -215,7 +215,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
     <p-drawer
       [visible]="drawerVisible()"
-      (visibleChange)="drawerVisibleSignal.set($event)"
+      (visibleChange)="onDrawerVisibleChange($event)"
       position="right"
       styleClass="document-create-drawer"
       [closable]="true"
@@ -738,6 +738,10 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   onDocumentCreated(): void {
     this.drawerVisibleSignal.set(false);
     this.refreshDocuments();
+  }
+
+  onDrawerVisibleChange(visible: boolean): void {
+    this.drawerVisibleSignal.set(visible);
   }
 
   /**
