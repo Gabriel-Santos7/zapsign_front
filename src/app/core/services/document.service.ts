@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, Subject, tap } from 'rxjs';
+import { Observable, Subject, tap, interval, switchMap, filter, takeWhile } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CompanyService } from './company.service';
 import {
@@ -162,6 +162,31 @@ export class DocumentService {
   getAlerts(companyId: number): Observable<DocumentAlertsResponse> {
     return this.http.get<DocumentAlertsResponse>(
       `${this.apiUrl}/companies/${companyId}/documents/alerts/`
+    );
+  }
+
+  /**
+   * Atualiza o status de um documento específico
+   * Útil para polling automático
+   */
+  checkDocumentStatus(
+    companyId: number,
+    documentId: number
+  ): Observable<Document> {
+    return this.refreshStatus(companyId, documentId).pipe(
+      tap((updatedDoc) => {
+        // Atualiza o cache se o documento estiver lá
+        this.documentsCache.update((docs) => {
+          const index = docs.findIndex((d) => d.id === documentId);
+          if (index !== -1) {
+            const updated = [...docs];
+            updated[index] = updatedDoc;
+            return updated;
+          }
+          return docs;
+        });
+        this.documentUpdated$.next();
+      })
     );
   }
 }

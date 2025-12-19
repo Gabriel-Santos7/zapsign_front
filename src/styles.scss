@@ -1,4 +1,20 @@
 /* ============================================
+   PrimeIcons - Garantir que os ícones sejam exibidos
+   ============================================ */
+.pi {
+  font-family: 'primeicons' !important;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  speak: none;
+}
+
+/* ============================================
    Reset e Base
    ============================================ */
 * {
@@ -631,9 +647,54 @@ a {
 }
 
 .p-toast {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+
+  /* Remover background de todos os elementos filhos */
+  * {
+    background: transparent !important;
+  }
+
   .p-toast-message {
     box-shadow: var(--shadow-lg);
     border-radius: var(--border-radius-md);
+    /* O background será definido pelo tema do PrimeNG baseado na severidade */
+    border: none !important;
+  }
+
+  .p-toast-message-content {
+    /* O background será definido pelo tema do PrimeNG */
+  }
+
+  /* Garantir que as mensagens de sucesso usem o background verde do tema */
+  .p-toast-message-success {
+    .p-toast-message-content {
+      background-color: var(--green-50) !important;
+      border: 1px solid var(--green-200) !important;
+    }
+  }
+
+  .p-toast-message-info {
+    .p-toast-message-content {
+      background-color: var(--blue-50) !important;
+      border: 1px solid var(--blue-200) !important;
+    }
+  }
+
+  .p-toast-message-warn {
+    .p-toast-message-content {
+      background-color: var(--orange-50) !important;
+      border: 1px solid var(--orange-200) !important;
+    }
+  }
+
+  .p-toast-message-error {
+    .p-toast-message-content {
+      background-color: var(--red-50) !important;
+      border: 1px solid var(--red-200) !important;
+    }
   }
 }
 

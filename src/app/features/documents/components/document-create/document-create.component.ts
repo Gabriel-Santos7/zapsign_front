@@ -3,6 +3,8 @@ import {
   inject,
   signal,
   OnInit,
+  Output,
+  EventEmitter,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -46,7 +48,6 @@ import { Document } from '../../../../shared/models/document.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="document-create-container">
-      <h2>Criar Novo Documento</h2>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="form-group">
@@ -247,6 +248,8 @@ import { Document } from '../../../../shared/models/document.model';
   `,
 })
 export class DocumentCreateComponent implements OnInit {
+  @Output() documentCreated = new EventEmitter<void>();
+
   private fb = inject(FormBuilder);
   private documentService = inject(DocumentService);
   private companyService = inject(CompanyService);
@@ -327,7 +330,8 @@ export class DocumentCreateComponent implements OnInit {
           this.checkInsights(document.id, companyId);
         });
 
-        this.router.navigate(['/documents']);
+        // Emite evento para o componente pai fechar o drawer
+        this.documentCreated.emit();
       },
       error: (err: HttpErrorResponse) => {
         this.submittingSignal.set(false);
@@ -371,7 +375,14 @@ export class DocumentCreateComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.router.navigate(['/documents']);
+    // Emite evento para fechar o drawer (se estiver em um drawer)
+    // Caso contrário, navega de volta
+    if (this.documentCreated.observed) {
+      // Se há observadores, significa que está em um drawer
+      this.documentCreated.emit();
+    } else {
+      this.router.navigate(['/documents']);
+    }
   }
 }
 

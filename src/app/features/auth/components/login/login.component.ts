@@ -232,6 +232,21 @@ interface LoginResponse {
       font-size: 2rem;
       box-shadow: var(--shadow-md);
       margin-bottom: var(--spacing-xs);
+
+      i {
+        font-family: 'primeicons' !important;
+        font-style: normal;
+        font-weight: normal;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+        display: inline-block;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-size: 2rem;
+        color: white !important;
+        fill: white !important;
+      }
     }
 
     .login-header h1 {

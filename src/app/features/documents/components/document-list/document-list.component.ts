@@ -17,8 +17,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { DrawerModule } from 'primeng/drawer';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, of, Subject, takeUntil } from 'rxjs';
+import { catchError, of, Subject, takeUntil, interval, forkJoin, from, EMPTY } from 'rxjs';
 import { DocumentService } from '../../../../core/services/document.service';
 import { CompanyService } from '../../../../core/services/company.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -26,6 +27,7 @@ import { Document, DocumentStatus } from '../../../../shared/models/document.mod
 import { PaginatedResponse } from '../../../../shared/models/api-response.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
+import { DocumentCreateComponent } from '../document-create/document-create.component';
 import { STATUS_LABELS } from '../../../../shared/utils/constants';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -40,8 +42,10 @@ import { HttpErrorResponse } from '@angular/common/http';
     SelectModule,
     ConfirmDialogModule,
     TooltipModule,
+    DrawerModule,
     StatusBadgeComponent,
     LoadingComponent,
+    DocumentCreateComponent,
     DatePipe,
   ],
   providers: [ConfirmationService],
@@ -208,6 +212,18 @@ import { HttpErrorResponse } from '@angular/common/http';
     </div>
 
     <p-confirmDialog />
+
+    <p-drawer
+      [visible]="drawerVisible()"
+      (visibleChange)="drawerVisibleSignal.set($event)"
+      position="right"
+      styleClass="document-create-drawer"
+      [closable]="true"
+      header="Criar Novo Documento"
+      (onHide)="onDrawerClose()"
+    >
+      <app-document-create (documentCreated)="onDocumentCreated()" />
+    </p-drawer>
   `,
   styles: `
     .document-list-container {
@@ -430,6 +446,34 @@ import { HttpErrorResponse } from '@angular/common/http';
         flex-wrap: wrap;
       }
     }
+
+    /* Estilos para o drawer de criação de documento */
+    ::ng-deep .document-create-drawer {
+      width: 600px;
+    }
+
+    @media (max-width: 768px) {
+      ::ng-deep .document-create-drawer {
+        width: 100vw;
+      }
+    }
+
+    ::ng-deep .document-create-drawer .p-drawer-content {
+      padding: 0;
+    }
+
+    ::ng-deep app-document-create {
+      display: block;
+      height: 100%;
+    }
+
+    ::ng-deep app-document-create .document-create-container {
+      padding: var(--spacing-lg);
+      max-width: 100%;
+      margin: 0;
+      height: 100%;
+      overflow-y: auto;
+    }
   `,
 })
 export class DocumentListComponent implements OnInit, OnDestroy {
@@ -450,6 +494,7 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   private readonly pageSizeSignal = signal<number>(20);
   private readonly selectedStatusSignal = signal<DocumentStatus | null>(null);
   private readonly searchTermSignal = signal<string>('');
+  private readonly drawerVisibleSignal = signal<boolean>(false);
 
   loading = this.loadingSignal.asReadonly();
   error = this.errorSignal.asReadonly();
@@ -457,6 +502,7 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   totalRecords = this.totalRecordsSignal.asReadonly();
   currentPage = this.currentPageSignal.asReadonly();
   pageSize = this.pageSizeSignal.asReadonly();
+  drawerVisible = this.drawerVisibleSignal.asReadonly();
   
   selectedStatus: DocumentStatus | null = null;
   searchTerm: string = '';
@@ -490,6 +536,9 @@ export class DocumentListComponent implements OnInit, OnDestroy {
       .subscribe((): void => {
         this.refreshDocuments();
       });
+
+    // Polling automático para verificar status de documentos pendentes
+    this.startStatusPolling();
   }
 
   ngOnInit(): void {
@@ -679,7 +728,81 @@ export class DocumentListComponent implements OnInit, OnDestroy {
   }
 
   navigateToCreate(): void {
-    this.router.navigate(['/documents/create']);
+    this.drawerVisibleSignal.set(true);
+  }
+
+  onDrawerClose(): void {
+    this.drawerVisibleSignal.set(false);
+  }
+
+  onDocumentCreated(): void {
+    this.drawerVisibleSignal.set(false);
+    this.refreshDocuments();
+  }
+
+  /**
+   * Inicia polling automático para verificar mudanças de status
+   * Verifica apenas documentos pendentes ou em progresso a cada 30 segundos
+   */
+  private startStatusPolling(): void {
+    interval(30000) // 30 segundos
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        const companyId = this.companyService.getCompanyId();
+        if (!companyId) {
+          return;
+        }
+
+        // Busca apenas documentos que precisam ser verificados
+        const docsToCheck = this.documentsSignal().filter(
+          (doc) =>
+            doc.internal_status === 'pending' ||
+            doc.internal_status === 'in_progress'
+        );
+
+        if (docsToCheck.length === 0) {
+          return;
+        }
+
+        // Verifica o status de cada documento pendente em paralelo
+        const statusChecks = docsToCheck.map((doc) =>
+          this.documentService
+            .checkDocumentStatus(companyId, doc.id)
+            .pipe(catchError(() => of(null)))
+        );
+
+        forkJoin(statusChecks)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe((updatedDocs: (Document | null)[]) => {
+            updatedDocs.forEach((updatedDoc) => {
+              if (!updatedDoc) {
+                return;
+              }
+
+              // Atualiza o documento na lista se o status mudou
+              const currentDocs = this.documentsSignal();
+              const index = currentDocs.findIndex((d) => d.id === updatedDoc.id);
+              if (index !== -1) {
+                const currentDoc = currentDocs[index];
+                if (currentDoc.internal_status !== updatedDoc.internal_status) {
+                  // Status mudou, atualiza a lista
+                  this.documentsSignal.update((docs) => {
+                    const updated = [...docs];
+                    updated[index] = updatedDoc;
+                    return updated;
+                  });
+
+                  // Notifica se foi assinado (completed)
+                  if (updatedDoc.internal_status === 'completed') {
+                    this.notificationService.showSuccess(
+                      `Documento "${updatedDoc.name}" foi assinado!`
+                    );
+                  }
+                }
+              }
+            });
+          });
+      });
   }
 
   trackByDocumentId(index: number, document: Document): number {
