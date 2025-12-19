@@ -10,6 +10,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      // Log detalhado do erro para debug
+      console.error('HTTP Error:', {
+        url: req.url,
+        status: error.status,
+        statusText: error.statusText,
+        error: error.error,
+        headers: error.headers
+      });
+
       if (error.status === 401) {
         router.navigate(['/login']);
         notificationService.showError('Sessão expirada. Faça login novamente.');
