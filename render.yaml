@@ -1,12 +1,12 @@
-services:
-  - type: web
-    name: zapsign-front
-    env: static
+static_sites:
+  - name: zapsign-front
     buildCommand: npm ci --legacy-peer-deps && NODE_OPTIONS='--max-old-space-size=512' npm run build
-    staticPublishPath: ./dist/zapsign_front/browser
+    publishPath: ./dist/zapsign_front/browser
     envVars:
       - key: NODE_VERSION
         value: 20.x
       - key: NODE_OPTIONS
         value: --max-old-space-size=512
+      - key: API_URL
+        value: https://zapsign-api.onrender.com/api
 
