@@ -395,20 +395,10 @@ export class LoginComponent {
 
     const credentials: LoginRequest = this.loginForm.value;
 
-    console.log('Tentando fazer login:', { url: `${API_BASE_URL}/api-token-auth/`, credentials: { ...credentials, password: '***' } });
-    
     this.http
       .post<LoginResponse>(`${API_BASE_URL}/api-token-auth/`, credentials)
       .pipe(
         catchError((err: HttpErrorResponse) => {
-          console.error('Erro no login:', {
-            status: err.status,
-            statusText: err.statusText,
-            error: err.error,
-            url: err.url,
-            headers: err.headers
-          });
-          
           const errorMessage =
             err.error?.detail ||
             err.error?.non_field_errors?.[0] ||
