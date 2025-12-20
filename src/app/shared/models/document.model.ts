@@ -75,6 +75,7 @@ export interface DocumentAlert {
   document_id: number;
   document_name: string;
   severity: 'info' | 'warning' | 'error';
+  created_at?: string;
 }
 
 export interface DocumentAlertsResponse {
