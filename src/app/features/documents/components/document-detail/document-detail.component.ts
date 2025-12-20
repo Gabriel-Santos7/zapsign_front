@@ -55,6 +55,15 @@ import { SignerFormData } from '../../../../shared/models/signer.model';
         <div class="header-actions">
           <h2>{{ doc.name }}</h2>
           <div class="action-buttons">
+            @if (doc.internal_status === 'draft') {
+              <p-button
+                label="Enviar para Assinatura"
+                icon="pi pi-send"
+                severity="success"
+                (onClick)="sendDraftToSignature()"
+                [loading]="sendingToSignature()"
+              />
+            }
             <p-button
               label="Editar"
               icon="pi pi-pencil"
@@ -64,6 +73,7 @@ import { SignerFormData } from '../../../../shared/models/signer.model';
               label="Adicionar Signatário"
               icon="pi pi-user-plus"
               (onClick)="showAddSignerDialog = true"
+              [disabled]="doc.internal_status === 'draft'"
             />
             <p-button
               label="Cancelar Documento"
@@ -297,11 +307,13 @@ export class DocumentDetailComponent implements OnInit {
   private readonly loadingSignal = signal<boolean>(false);
   private readonly errorSignal = signal<string | null>(null);
   private readonly refreshingSignal = signal<boolean>(false);
+  private readonly sendingToSignatureSignal = signal<boolean>(false);
   private readonly documentSignal = signal<Document | null>(null);
 
   loading = this.loadingSignal.asReadonly();
   error = this.errorSignal.asReadonly();
   refreshing = this.refreshingSignal.asReadonly();
+  sendingToSignature = this.sendingToSignatureSignal.asReadonly();
   document = this.documentSignal.asReadonly();
 
   showAddSignerDialog = false;
@@ -375,6 +387,46 @@ export class DocumentDetailComponent implements OnInit {
           err.error?.message || 'Erro ao atualizar status'
         );
         this.refreshingSignal.set(false);
+      },
+    });
+  }
+
+  sendDraftToSignature(): void {
+    const doc = this.document();
+    if (!doc) {
+      return;
+    }
+
+    if (doc.internal_status !== 'draft') {
+      this.notificationService.showError('Apenas documentos em rascunho podem ser enviados para assinatura.');
+      return;
+    }
+
+    this.companyService.ensureCompanyLoaded().subscribe({
+      next: (company) => {
+        if (!company) {
+          this.notificationService.showError('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
+          return;
+        }
+
+        const companyId = company.id;
+        this.sendingToSignatureSignal.set(true);
+        this.documentService.sendDraftToSignature(companyId, doc.id).subscribe({
+          next: (updatedDocument: Document) => {
+            this.documentSignal.set(updatedDocument);
+            this.notificationService.showSuccess('Documento enviado para assinatura com sucesso!');
+            this.sendingToSignatureSignal.set(false);
+          },
+          error: (err: HttpErrorResponse) => {
+            const errorMessage = err.error?.message || err.error?.detail || 'Erro ao enviar documento para assinatura';
+            this.notificationService.showError(errorMessage);
+            this.sendingToSignatureSignal.set(false);
+          },
+        });
+      },
+      error: () => {
+        this.notificationService.showError('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
+        this.sendingToSignatureSignal.set(false);
       },
     });
   }

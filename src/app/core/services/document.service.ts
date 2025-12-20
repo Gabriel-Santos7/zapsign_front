@@ -153,6 +153,20 @@ export class DocumentService {
     );
   }
 
+  sendDraftToSignature(
+    companyId: number,
+    documentId: number
+  ): Observable<Document> {
+    return this.http.post<Document>(
+      `${this.apiUrl}/companies/${companyId}/documents/${documentId}/send_to_signature/`,
+      {}
+    ).pipe(
+      tap(() => {
+        this.documentUpdated$.next();
+      })
+    );
+  }
+
   getMetrics(companyId: number): Observable<DocumentMetrics> {
     return this.http.get<DocumentMetrics>(
       `${this.apiUrl}/companies/${companyId}/documents/metrics/`

@@ -153,6 +153,17 @@ import { HttpErrorResponse } from '@angular/common/http';
               <td>{{ document.created_at | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>
                 <div class="action-buttons">
+                  @if (document.internal_status === 'draft') {
+                    <p-button
+                      icon="pi pi-send"
+                      [rounded]="true"
+                      [text]="true"
+                      (onClick)="sendDraftToSignature(document)"
+                      [pTooltip]="'Enviar para Assinatura'"
+                      ariaLabel="Enviar rascunho para assinatura"
+                      severity="success"
+                    />
+                  }
                   <p-button
                     icon="pi pi-eye"
                     [rounded]="true"
@@ -218,6 +229,7 @@ import { HttpErrorResponse } from '@angular/common/http';
       (visibleChange)="onDrawerVisibleChange($event)"
       position="right"
       styleClass="document-create-drawer"
+      [style]="{ height: '100vh' }"
       [closable]="true"
       header="Criar Novo Documento"
       (onHide)="onDrawerClose()"
@@ -449,7 +461,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
     /* Estilos para o drawer de criação de documento */
     ::ng-deep .document-create-drawer {
-      width: 800px;
+      width: 800px !important;
+      height: 100vh !important;
+    }
+    
+    ::ng-deep .document-create-drawer .p-drawer {
+      height: 100vh !important;
     }
 
     @media (max-width: 768px) {
@@ -460,11 +477,17 @@ import { HttpErrorResponse } from '@angular/common/http';
 
     ::ng-deep .document-create-drawer .p-drawer-content {
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
     }
 
     ::ng-deep app-document-create {
-      display: block;
+      display: flex;
+      flex-direction: column;
       height: 100%;
+      min-height: 0;
     }
 
     ::ng-deep app-document-create .document-create-container {
@@ -473,6 +496,9 @@ import { HttpErrorResponse } from '@angular/common/http';
       margin: 0;
       height: 100%;
       overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+      min-height: 0;
     }
   `,
 })
@@ -681,6 +707,41 @@ export class DocumentListComponent implements OnInit, OnDestroy {
 
   viewInsights(id: number): void {
     this.router.navigate(['/documents', id, 'insights']);
+  }
+
+  sendDraftToSignature(document: Document): void {
+    if (document.internal_status !== 'draft') {
+      this.notificationService.showError('Apenas documentos em rascunho podem ser enviados para assinatura.');
+      return;
+    }
+
+    this.companyService.ensureCompanyLoaded()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (company) => {
+          if (!company) {
+            this.notificationService.showError('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
+            return;
+          }
+
+          const companyId = company.id;
+          this.documentService.sendDraftToSignature(companyId, document.id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                this.notificationService.showSuccess('Documento enviado para assinatura com sucesso!');
+                this.refreshDocuments();
+              },
+              error: (err: HttpErrorResponse) => {
+                const errorMessage = err.error?.message || err.error?.detail || 'Erro ao enviar documento para assinatura';
+                this.notificationService.showError(errorMessage);
+              },
+            });
+        },
+        error: () => {
+          this.notificationService.showError('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
+        },
+      });
   }
 
   confirmDelete(document: Document): void {

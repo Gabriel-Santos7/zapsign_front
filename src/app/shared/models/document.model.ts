@@ -1,6 +1,7 @@
 import { Signer } from './signer.model';
 
 export type DocumentStatus =
+  | 'draft'
   | 'pending'
   | 'in_progress'
   | 'completed'
@@ -33,6 +34,7 @@ export interface CreateDocumentRequest {
     email: string;
   }>;
   date_limit_to_sign?: string;
+  save_as_draft?: boolean;
 }
 
 export interface UpdateDocumentRequest {

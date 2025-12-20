@@ -209,10 +209,19 @@ import { Document } from '../../../../shared/models/document.model';
             [disabled]="submitting()"
           />
           <p-button
-            type="submit"
-            label="Criar Documento"
+            label="Salvar como Rascunho"
+            severity="secondary"
+            (onClick)="onSaveDraft()"
             [loading]="submitting()"
             [disabled]="form.invalid || submitting()"
+            icon="pi pi-save"
+          />
+          <p-button
+            type="submit"
+            label="Enviar para Assinatura"
+            [loading]="submitting()"
+            [disabled]="form.invalid || submitting()"
+            icon="pi pi-send"
           />
         </div>
       </form>
@@ -344,7 +353,7 @@ export class DocumentCreateComponent implements OnInit {
     }
   }
 
-  onSubmit(): void {
+  onSubmit(saveAsDraft: boolean = false): void {
     if (this.form.invalid || this.signersFormArray.length === 0) {
       this.form.markAllAsTouched();
       this.notificationService.showError(
@@ -369,19 +378,23 @@ export class DocumentCreateComponent implements OnInit {
       date_limit_to_sign: formValue.date_limit_to_sign
         ? new Date(formValue.date_limit_to_sign).toISOString()
         : undefined,
+      save_as_draft: saveAsDraft,
     };
 
     this.documentService.createDocument(companyId, data).subscribe({
       next: (document: Document) => {
-        this.notificationService.showSuccess(
-          'Documento criado com sucesso!'
-        );
+        const message = saveAsDraft
+          ? 'Documento salvo como rascunho com sucesso!'
+          : 'Documento criado e enviado para assinatura com sucesso!';
+        this.notificationService.showSuccess(message);
         this.submittingSignal.set(false);
         
-        // Aguarda 10s e verifica insights
-        timer(10000).subscribe(() => {
-          this.checkInsights(document.id, companyId);
-        });
+        // Aguarda 10s e verifica insights apenas se não for rascunho
+        if (!saveAsDraft) {
+          timer(10000).subscribe(() => {
+            this.checkInsights(document.id, companyId);
+          });
+        }
 
         // Emite evento para o componente pai fechar o drawer
         this.documentCreated.emit();
@@ -389,7 +402,9 @@ export class DocumentCreateComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.submittingSignal.set(false);
         
-        let errorMessage = 'Erro ao criar documento';
+        let errorMessage = saveAsDraft
+          ? 'Erro ao salvar rascunho'
+          : 'Erro ao criar documento';
         
         if (err.error) {
           // Tenta pegar a mensagem de erro do backend
@@ -414,6 +429,10 @@ export class DocumentCreateComponent implements OnInit {
         this.notificationService.showError(errorMessage);
       },
     });
+  }
+
+  onSaveDraft(): void {
+    this.onSubmit(true);
   }
 
   checkInsights(documentId: number, companyId: number): void {

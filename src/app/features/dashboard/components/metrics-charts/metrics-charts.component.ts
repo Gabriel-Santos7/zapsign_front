@@ -229,32 +229,42 @@ export class MetricsChartsComponent implements OnInit {
   }
 
   loadMetrics(): void {
-    const companyId = this.companyService.getCompanyId();
-    if (!companyId) {
-      this.errorSignal.set('Company não encontrada');
-      return;
-    }
-
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.documentService
-      .getMetrics(companyId)
-      .pipe(
-        catchError((err: HttpErrorResponse) => {
-          this.errorSignal.set(
-            err.error?.message || 'Erro ao carregar métricas'
-          );
+    // Tenta carregar a company se não estiver disponível
+    this.companyService.ensureCompanyLoaded().subscribe({
+      next: (company) => {
+        if (!company) {
+          this.errorSignal.set('Nenhuma empresa encontrada. Por favor, entre em contato com o suporte.');
           this.loadingSignal.set(false);
-          return of(null);
-        })
-      )
-      .subscribe((metrics: DocumentMetrics | null) => {
-        if (metrics) {
-          this.metricsSignal.set(metrics);
+          return;
         }
+
+        const companyId = company.id;
+        this.documentService
+          .getMetrics(companyId)
+          .pipe(
+            catchError((err: HttpErrorResponse) => {
+              this.errorSignal.set(
+                err.error?.message || 'Erro ao carregar métricas'
+              );
+              this.loadingSignal.set(false);
+              return of(null);
+            })
+          )
+          .subscribe((metrics: DocumentMetrics | null) => {
+            if (metrics) {
+              this.metricsSignal.set(metrics);
+            }
+            this.loadingSignal.set(false);
+          });
+      },
+      error: (err) => {
+        this.errorSignal.set('Erro ao carregar informações da empresa. Por favor, tente fazer login novamente.');
         this.loadingSignal.set(false);
-      });
+      },
+    });
   }
 }
 

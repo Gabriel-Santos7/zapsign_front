@@ -28,20 +28,28 @@ import { STATUS_LABELS, STATUS_COLORS, SIGNER_STATUS_LABELS, SIGNER_STATUS_COLOR
   `,
 })
 export class StatusBadgeComponent {
-  status = input.required<DocumentStatus | SignerStatus>();
+  status = input<DocumentStatus | SignerStatus | null | undefined>();
 
   label = computed(() => {
     const s = this.status();
+    // Se status for undefined/null, tratar como rascunho
+    if (!s) {
+      return STATUS_LABELS['draft'];
+    }
     if (this.isDocumentStatus(s)) {
-      return STATUS_LABELS[s];
+      return STATUS_LABELS[s] || STATUS_LABELS['draft'];
     }
     return SIGNER_STATUS_LABELS[s];
   });
 
   severity = computed((): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | null => {
     const s = this.status();
+    // Se status for undefined/null, tratar como rascunho
+    if (!s) {
+      return STATUS_COLORS['draft'] as 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
+    }
     if (this.isDocumentStatus(s)) {
-      return STATUS_COLORS[s] as 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
+      return (STATUS_COLORS[s] || STATUS_COLORS['draft']) as 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
     }
     return SIGNER_STATUS_COLORS[s] as 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
   });

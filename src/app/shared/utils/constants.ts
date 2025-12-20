@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 export const API_BASE_URL = environment.apiUrl;
 
 export const STATUS_LABELS: Record<DocumentStatus, string> = {
+  draft: 'Rascunho',
   pending: 'Pendente',
   in_progress: 'Em Andamento',
   completed: 'Concluído',
@@ -14,6 +15,7 @@ export const STATUS_LABELS: Record<DocumentStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<DocumentStatus, string> = {
+  draft: 'secondary',
   pending: 'warn',
   in_progress: 'info',
   completed: 'success',
