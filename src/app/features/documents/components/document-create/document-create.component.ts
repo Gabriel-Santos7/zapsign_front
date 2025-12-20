@@ -21,10 +21,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DatePicker } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import { SelectModule } from 'primeng/select';
 import { DocumentService } from '../../../../core/services/document.service';
 import { CompanyService } from '../../../../core/services/company.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { CreateDocumentRequest } from '../../../../shared/models/document.model';
+import { Company } from '../../../../shared/models/company.model';
 import { pdfUrlValidator, emailValidator } from '../../../../shared/utils/validators';
 import { PdfUrlValidatorComponent } from '../../../../shared/components/pdf-url-validator/pdf-url-validator.component';
 import { LoadingComponent } from '../../../../shared/components/loading/loading.component';
@@ -42,6 +44,7 @@ import { Document } from '../../../../shared/models/document.model';
     DatePicker,
     TableModule,
     ToastModule,
+    SelectModule,
     PdfUrlValidatorComponent,
     LoadingComponent,
   ],
@@ -50,6 +53,28 @@ import { Document } from '../../../../shared/models/document.model';
     <div class="document-create-container">
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="company">Empresa *</label>
+          <p-select
+            id="company"
+            formControlName="company"
+            [options]="companies()"
+            optionLabel="name"
+            optionValue="id"
+            [showClear]="false"
+            placeholder="Selecione uma empresa"
+            [invalid]="form.get('company')?.invalid && form.get('company')?.touched"
+            aria-required="true"
+            aria-describedby="company-error"
+            class="w-full"
+          />
+          @if (form.get('company')?.invalid && form.get('company')?.touched) {
+            <small id="company-error" class="error-message" role="alert">
+              Empresa é obrigatória
+            </small>
+          }
+        </div>
+
         <div class="form-group">
           <label for="name">Nome do Documento *</label>
           <input
@@ -214,6 +239,10 @@ import { Document } from '../../../../shared/models/document.model';
       font-weight: 500;
     }
 
+    .form-group ::ng-deep .p-select {
+      width: 100%;
+    }
+
     .error-message {
       color: var(--red-500);
       display: block;
@@ -257,11 +286,14 @@ export class DocumentCreateComponent implements OnInit {
   private router = inject(Router);
 
   private readonly submittingSignal = signal<boolean>(false);
+  private readonly companiesSignal = signal<Company[]>([]);
   submitting = this.submittingSignal.asReadonly();
+  companies = this.companiesSignal.asReadonly();
 
   minDate = new Date();
 
   form: FormGroup = this.fb.group({
+    company: [null, [Validators.required]],
     name: ['', [Validators.required]],
     url_pdf: ['', [Validators.required, pdfUrlValidator()]],
     date_limit_to_sign: [null],
@@ -273,6 +305,27 @@ export class DocumentCreateComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Carrega a lista de empresas
+    this.companyService.getAllCompanies().subscribe({
+      next: (companies) => {
+        this.companiesSignal.set(companies);
+        
+        // Se houver apenas uma empresa, seleciona automaticamente
+        if (companies.length === 1) {
+          this.form.patchValue({ company: companies[0].id });
+        } else if (companies.length > 0) {
+          // Se houver empresa atual, seleciona ela
+          const currentCompanyId = this.companyService.getCompanyId();
+          if (currentCompanyId) {
+            this.form.patchValue({ company: currentCompanyId });
+          }
+        }
+      },
+      error: () => {
+        this.notificationService.showError('Erro ao carregar empresas');
+      },
+    });
+
     // Adiciona um signatário vazio por padrão
     this.addSigner();
   }
@@ -300,9 +353,9 @@ export class DocumentCreateComponent implements OnInit {
       return;
     }
 
-    const companyId = this.companyService.getCompanyId();
+    const companyId = this.form.value.company;
     if (!companyId) {
-      this.notificationService.showError('Company não encontrada');
+      this.notificationService.showError('Selecione uma empresa');
       return;
     }
 

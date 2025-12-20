@@ -64,4 +64,13 @@ export class CompanyService {
 
     return this.loadingCompany$;
   }
+
+  getAllCompanies(): Observable<Company[]> {
+    return this.http
+      .get<PaginatedResponse<Company>>(`${this.apiUrl}/companies/`)
+      .pipe(
+        map((response) => response.results),
+        catchError(() => of([]))
+      );
+  }
 }

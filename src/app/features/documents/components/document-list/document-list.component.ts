@@ -449,7 +449,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
     /* Estilos para o drawer de criação de documento */
     ::ng-deep .document-create-drawer {
-      width: 600px;
+      width: 800px;
     }
 
     @media (max-width: 768px) {
