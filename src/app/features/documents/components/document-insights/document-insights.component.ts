@@ -66,7 +66,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     <ng-template #insightsContent>
       @if (loading()) {
         <app-loading />
-      } @else if (error()) {
+      } @else if (error() && !isAnalysisNotAvailable()) {
         <div class="error-message" role="alert">
           <p>{{ error() }}</p>
           @if (canForceAnalysis()) {
@@ -76,6 +76,21 @@ import { HttpErrorResponse } from '@angular/common/http';
               [loading]="analyzing()"
             />
           }
+        </div>
+      } @else if (isAnalysisNotAvailable()) {
+        <div class="empty-state" role="status">
+          <div class="empty-state-icon">
+            <i class="pi pi-file" style="font-size: 4rem; color: var(--primary-color);"></i>
+          </div>
+          <h2>Análise ainda não disponível</h2>
+          <p>Este documento ainda não foi analisado. Clique no botão abaixo para iniciar a análise e obter insights sobre o conteúdo do documento.</p>
+          <p-button
+            label="Iniciar Análise"
+            icon="pi pi-search"
+            (onClick)="forceAnalysis()"
+            [loading]="analyzing()"
+            [style]="{ marginTop: '1rem' }"
+          />
         </div>
       } @else if (insights(); as ins) {
         <div class="insights-content">
@@ -188,6 +203,35 @@ import { HttpErrorResponse } from '@angular/common/http';
       text-align: center;
       color: var(--red-500);
     }
+
+    .empty-state {
+      padding: 3rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .empty-state-icon {
+      margin-bottom: 1.5rem;
+      opacity: 0.7;
+    }
+
+    .empty-state h2 {
+      margin: 0 0 1rem 0;
+      color: var(--text-color);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color-secondary);
+      max-width: 500px;
+      line-height: 1.6;
+    }
   `,
 })
 export class DocumentInsightsComponent implements OnInit {
@@ -232,6 +276,15 @@ export class DocumentInsightsComponent implements OnInit {
     return this.error() !== null && !this.analyzing();
   }
 
+  isAnalysisNotAvailable(): boolean {
+    const errorMsg = this.error();
+    return errorMsg !== null && (
+      errorMsg.includes('ainda não foi analisado') ||
+      errorMsg.includes('ainda não disponível') ||
+      errorMsg.includes('não foi analisado')
+    );
+  }
+
   loadInsights(id: number): void {
     const companyId = this.companyService.getCompanyId();
     if (!companyId) {
@@ -246,14 +299,20 @@ export class DocumentInsightsComponent implements OnInit {
       next: (insights: DocumentInsights) => {
         this.insightsSignal.set(insights);
         this.loadingSignal.set(false);
+        this.errorSignal.set(null);
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status === 404) {
-          this.errorSignal.set('Análise ainda não disponível. Clique em "Forçar Análise" para analisar agora.');
-        } else {
-          this.errorSignal.set(err.error?.message || 'Erro ao carregar insights');
-        }
         this.loadingSignal.set(false);
+        if (err.status === 404) {
+          // Estado esperado - não é um erro, apenas ainda não foi analisado
+          // Não mostrar toast de erro para 404
+          this.errorSignal.set('Análise ainda não disponível. Este documento ainda não foi analisado.');
+          this.insightsSignal.set(null);
+        } else {
+          // Erro real - mostrar mensagem de erro
+          // Toast será mostrado pelo interceptor automaticamente (exceto para 404)
+          this.errorSignal.set(err.error?.message || err.error?.detail || 'Erro ao carregar insights');
+        }
       },
     });
   }
@@ -278,8 +337,10 @@ export class DocumentInsightsComponent implements OnInit {
         this.notificationService.showSuccess('Análise concluída com sucesso');
       },
       error: (err: HttpErrorResponse) => {
-        this.errorSignal.set(err.error?.message || 'Erro ao forçar análise');
+        const errorMessage = err.error?.message || err.error?.detail || 'Erro ao analisar documento';
+        this.errorSignal.set(errorMessage);
         this.analyzingSignal.set(false);
+        // Toast será mostrado pelo interceptor automaticamente (exceto para 404)
       },
     });
   }

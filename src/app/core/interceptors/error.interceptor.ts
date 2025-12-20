@@ -22,6 +22,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         router.navigate(['/login']);
         notificationService.showError('Sessão expirada. Faça login novamente.');
+      } else if (error.status === 404) {
+        // 404 é um estado esperado em alguns casos (ex: análise não disponível)
+        // Não mostrar toast para 404 - deixar o componente tratar
+        // Apenas logar para debug
+        console.log('Resource not found (404):', req.url);
       } else if (error.status >= 400) {
         const errorMessage =
           error.error?.error ||
