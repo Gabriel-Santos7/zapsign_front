@@ -103,21 +103,21 @@ Os arquivos compilados estarão em `dist/zapsign_front/browser/`
 ```mermaid
 flowchart TD
     Start([Usuário Acessa Aplicação]) --> CheckAuth{Autenticado?}
-    CheckAuth -->|Não| Login[/login]
-    CheckAuth -->|Sim| Dashboard[/dashboard]
+    CheckAuth -->|"Não"| Login[Login]
+    CheckAuth -->|"Sim"| Dashboard[Dashboard]
     Login --> LoginForm[Formulário de Login]
-    LoginForm --> AuthAPI[API: POST /api-token-auth/]
-    AuthAPI -->|Sucesso| StoreToken[Armazena Token]
+    LoginForm --> AuthAPI["API: POST /api-token-auth/"]
+    AuthAPI -->|"Sucesso"| StoreToken[Armazena Token]
     StoreToken --> Redirect[Dashboard]
-    Dashboard --> Documents[/documents]
+    Dashboard --> Documents[Documents]
     Dashboard --> Metrics[Métricas e Alertas]
     Documents --> List[Lista de Documentos]
-    Documents --> Create[/documents/create]
-    Documents --> Detail[/documents/:id]
-    Detail --> Edit[/documents/:id/edit]
-    Detail --> Insights[/documents/:id/insights]
-    Create --> API[API: POST /documents/]
-    API -->|Sucesso| List
+    Documents --> Create[Criar Documento]
+    Documents --> Detail[Detalhes do Documento]
+    Detail --> Edit[Editar Documento]
+    Detail --> Insights[Insights do Documento]
+    Create --> API["API: POST /documents/"]
+    API -->|"Sucesso"| List
 ```
 
 ### Fluxo de Autenticação
