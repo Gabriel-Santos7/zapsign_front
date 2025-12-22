@@ -55,10 +55,6 @@ import { HttpErrorResponse } from '@angular/common/http';
             <div class="metric-value success">
               {{ signatureRate() }}%
             </div>
-            <div class="metric-subtitle">
-              {{ metrics()?.signed_documents ?? 0 }} de
-              {{ metrics()?.total_documents ?? 0 }} assinados
-            </div>
           </div>
         </p-card>
 
@@ -272,7 +268,8 @@ export class MetricsCardsComponent implements OnInit {
     if (!m || m.total_documents === 0) {
       return 0;
     }
-    return Math.round(m.signature_rate * 100);
+    // signature_rate já vem como porcentagem (0-100) do backend
+    return Math.round(m.signature_rate);
   });
 
   ngOnInit(): void {
